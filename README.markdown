@@ -1,9 +1,11 @@
-= AutoAsset Plugin =
+AutoAsset Plugin
+================
 
 A CakePHP 2.x (and 1.x) plugin to help easily manage and load CSS and JS files asynchronously.
 
 
-== Why? ==
+Why?
+====
 
 Because.
 
@@ -12,7 +14,8 @@ compressing, and caching your files into an unreadable mess. There are a lot of 
 do the latter for CakePHP, but (almost) none that do the former. That's where AutoAsset comes in.
 
 
-== Background ==
+Background
+==========
 
 There are a lot of CSS and JavaScript helpers (and some plugins) available which are designed 
 to help users load specific controller/action assets automatically. Initially I implemented that
@@ -32,28 +35,33 @@ include $css, a CSS lazy-loader and a couple of helper functions ($url and $name
 it all into your views and layouts.
 
 
-== Requirements ==
+Requirements
+============
 
 *   CakePHP 2.0 Beta or greater (CakePHP 1.3 is supported in the 1.x branch)
 *   PHP 5.2+ (You should already have it if you're using CakePHP 2.x!)
 
 
-== Installation ==
+Installation
+============
 
 
-=== Manual ===
+Manual
+------
 
 1.   Download the plugin: http://github.com/bmcclure/AutoAsset/zipball/master
 2.   Unzip the downloaded file to your CakePHP app's 'Plugin' folder
 3.   Rename the unzipped folder to 'AutoAsset'
 
 
-=== Directly From GitHub ===
+Directly From GitHub
+--------------------
 
-Simple clone this repository to your CakePHP application under app\Plugin\AutoAsset
+Simply clone this repository to your CakePHP application under app\Plugin\AutoAsset
 
 
-=== For CakePHP 2.0 ===
+For CakePHP 2.0 users
+---------------------
 
 No matter how you install the plugin, if you are using CakePHP 2.0 you need to make sure it is enabled in
 your app/Config/bootstrap.php file.
@@ -67,10 +75,12 @@ Or:
     CakePlugin::loadAll(); // Loads all plugins at once
 
 
-== Usage ==
+Usage
+=====
 
 
-=== Placing your media ===
+Placing your media files
+------------------------
 
 You can choose the directory to store your controller and action files in. You can use either controller 
 files, or action files, or both. To use the default directory which requires no additional configuration,
@@ -106,7 +116,8 @@ You might place your JS libraries in webroot/js/libs, for example. AutoAsset wil
 library paths such as 'libs/jquery-1.6.min'.
 
 
-=== Loading the component ===
+Loading the component
+---------------------
 
 Next, load the AssetGatherer component in your AppController. Your $components array might look like this:
 
@@ -139,7 +150,9 @@ Finally, in your AppController's beforeFilter() callback, add the following line
 
 This will provide the $assets array to your views.
 
-=== Loading the helper ===
+
+Loading the helper
+------------------
 
 Also in your AppController, add the AssetLoader helper to your $helpers array. It might look like this:
 
@@ -148,7 +161,8 @@ Also in your AppController, add the AssetLoader helper to your $helpers array. I
 The AssetLoader helper doesn't take any settings.
 
 
-=== Configuring your layout ===
+Configuring your layout
+-----------------------
 
 If you are using AssetGatherer's 'requiredJs' or 'requiredCss' options, add the following to your layout 
 somewhere within the <head> tag (and before you load other JS and CSS files):
@@ -164,19 +178,23 @@ And finally near the bottom, usually right before the closing <body> tag, add th
     }
 
 
-=== The end result ===
+The end result
+--------------
 
 Now that everything is hooked up, you don't need to touch your code to add controller/action JS or CSS files,
 and they won't slow down the loading of your site.
 
 But don't let the magic stop there! Read on...
 
-== Included JavaScript Helpers ==
+
+Included JavaScript Helpers
+===========================
 
 AutoAsset includes a number of special global JavaScript functions which have no dependencies that you can use
 throughout your applications to help simplify your scripts:
 
-=== $script ===
+$script
+-------
 
 A tiny asynchronous JavaScipt loader. AutoAsset uses it to load your controller/action files, and you can use
 it yourself to load any other JS files that you'd like.
@@ -203,7 +221,8 @@ Then later, in another file, we can use jQuery easily like this:
 $script is a whole lot more powerful than that, though, so I encourage you to visit its own project page on GitHub
 and familiarize yourself with its functionality.
 
-=== $css ===
+$css
+----
 
 $css is my take on the $script of the CSS world... I know, hard to imagine, right?
 
@@ -215,7 +234,8 @@ Use it to lazy-load CSS files just like $script loads JS files, so you can do st
 
 Some work is still required to get CSS callbacks working properly.
 
-=== $namespace ===
+$namespace
+----------
 
 A simple function which allows you to easily namespace your JavaScript libraries to keep everything
 neat and tidy.
@@ -232,7 +252,8 @@ Namespacing your scripts is as simple as writing something like this:
         }
     }
 
-=== $url ===
+$url
+----
 
 An attempt at a cake-like way to resolve URLs for JavaScript.
 
@@ -244,6 +265,7 @@ Now you can simply call $url('/users/add') which will return the absolute URL to
 action of the 'users' controller.
 
 
-== Final Notes ==
+Final Notes
+===========
 
 More to come!
