@@ -1,10 +1,6 @@
 <?php
-class AssetGathererComponent extends Object {
-	var $components = array(
-		'RequestHandler',
-	);
-
-	private $__options = array(
+class AssetGathererComponent extends Component {
+	public $settings = array(
 		'mainJs' => 'main',
 		'mainCss' => 'main',
 		'requiredJs' => array(),
@@ -16,10 +12,12 @@ class AssetGathererComponent extends Object {
 		'includeUrlJs' => '/auto_asset/js/url',
 	);
 
-	private $controller = null;
+	protected $controller = null;
 
-	public function initialize(&$controller, $settings=array()) {
-		$this->controller = $controller;
+	protected $request = null;
+
+	public function __construct(ComponentCollection $collection, $settings = array()) {
+		$settings = array_merge($this->settings, (array)$settings);
 
 		if (isset($settings['controllersPath']) && !empty($settings['controllersPath'])) {
 			if (substr($settings['controllersPath'], strlen($settings['controllersPath'])) != DS) {
@@ -27,18 +25,19 @@ class AssetGathererComponent extends Object {
 			}
 		}
 
-		if (is_array($settings)) {
-			$this->__options = array_merge($this->__options, $settings);
-		}
+		$this->controller = $collection->getController();
+		$this->request = $this->controller->request;
+
+		parent::__construct($collection, $settings);
 	}
 
 	public function getAssets() {
-		extract($this->__options);
+		extract($this->settings);
 
 		$controller = Inflector::underscore($this->controller->params['controller']);
 		$action = Inflector::underscore($this->controller->params['action']);
 
-		if ($this->RequestHandler->isAjax()) {
+		if ($this->request->isAjax()) {
 			$assets = array(
 				'css' => array('async' => $this->_getValidFiles(array(
 					$controllersPath.DS.$controller,
