@@ -1,19 +1,38 @@
 <?php
-class AssetLoaderHelper extends AppHelper {
 /**
- * View helpers required by this helper
+ * AssetLoader Helper
  *
- * @var array
- * @access public
+ * Assists in outputting prerequisite (required) and asynchronous (lazy-loaded)
+ *  CSS and JavaScript assets with the help of the HtmlHelper.
  */
-    public $helpers = array('Html');
+class AssetLoaderHelper extends AppHelper {
+	/**
+	 * View helpers required by this helper
+	 */
+	public $helpers = array('Html');
 
+	/**
+	 * Indicates whether or not the required (prerequisite) files
+	 *  have already been output;
+	 */
 	var $requiredDone = false;
 
+	/**
+	 * Returns a string containing the HTML output for the required Javascript
+	 *  and CSS files referenced within $assets
+	 */
 	public function required($assets) {
 		$output = '';
 
+		if ($this->requiredDone) {
+			return $output;
+		}
+
 		if (isset($assets['css']['required'])) {
+			if (is_string($assets['css']['required'])) {
+				$assets['css']['required'] = array($assets['css']['required']);
+			}
+
 			foreach ($assets['css']['required'] as $asset) {
 				if (!empty($output)) {
 					$output .= "\n";
@@ -28,6 +47,10 @@ class AssetLoaderHelper extends AppHelper {
 		}
 
 		if (isset($assets['js']['required'])) {
+			if (is_string($assets['js']['required'])) {
+				$assets['js']['required'] = array($assets['js']['required']);
+			}
+
 			foreach ($assets['js']['required'] as $asset) {
 				if (!empty($output)) {
 					$output .= "\n";
@@ -42,6 +65,12 @@ class AssetLoaderHelper extends AppHelper {
 		return $output;
 	}
 
+	/**
+	 * Returns the HTML output to lazy-load the configured Javascript and Css
+	 *
+	 * Also includes the required CSS and JS if it has not already been output with the
+	 *  required($assets) function, since they need to appear before the async assets.
+	 */
 	public function load($assets) {
 		$output = '';
 
@@ -89,6 +118,7 @@ class AssetLoaderHelper extends AppHelper {
 
 		if (!$this->requiredDone) {
 			$output = $this->required($assets) . "\n\n" . $output;
+			$this->requiredDone = true;
 		}
 
 		return $output;

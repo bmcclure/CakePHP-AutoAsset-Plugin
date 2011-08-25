@@ -1,4 +1,4 @@
-$url = function(url) {
+var $url = function(url) {
 	if (url.match(/^http(s)?:/)) {
 		return url;
 	}

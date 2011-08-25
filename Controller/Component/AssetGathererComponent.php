@@ -1,93 +1,189 @@
 <?php
+/**
+ * AssetGatherer Component
+ *
+ * Gathers valid CSS and JS files from the server
+ *  and organizes them into an array for use with
+ *  the AssetLoader Helper.
+ */
 class AssetGathererComponent extends Component {
+
+	/**
+	 * Configurable settings for the component
+	 *
+	 * asyncJs: The JavaScript files to load asynchronously (after required files)
+	 * asyncCss: The CSS files to load asynchronously (after required files)
+	 * requiredJs: The JavaScript prerequisites to load in the Head of the document
+	 * requiredCss: The CSS prerequisites to load in the Head of the document
+	 * controllersPath: The path under /css and /js that will contain your controller/action files
+	 * scriptJs: The path to the version of script.js to load (or null to not load script.js)
+	 * cssJs: The path to the version of css.js to load (or null to not load css.js)
+	 * namespaceJs: The path to the version of namespace.js to load (or null to not load namespace.js)
+	 * urlJs: The path to the version of url.js to load (or null to not load url.js)
+	 */
 	public $settings = array(
-		'mainJs' => 'main',
-		'mainCss' => 'main',
-		'requiredJs' => array(),
-		'requiredCss' => array(),
-		'controllersPath' => 'controllers',
-		'includeNamespaceJs' => '/auto_asset/js/namespace',
-		'includeScriptJs' => '/auto_asset/js/script.min',
-		'includeCssJs' => '/auto_asset/js/css',
-		'includeUrlJs' => '/auto_asset/js/url',
+		'asyncJs' => 'bootstrap', // (null, string, array)
+		'asyncCss' => null, // (null, string, array)
+		'requiredJs' => null, // (null, string, array)
+		'requiredCss' => null, // (null, string, array)
+		'controllersPath' => 'controllers', // (string)
+		'scriptJs' => '/auto_asset/js/script.min', // (null, string)
+		'cssJs' => '/auto_asset/js/css', // (null, string)
+		'namespaceJs' => '/auto_asset/js/namespace', // (null, string)
+		'urlJs' => '/auto_asset/js/url', // (null, string)
 	);
 
-	protected $controller = null;
+	/**
+	 * A reference to the current Controller
+	 */
+	protected $controller;
 
-	protected $request = null;
+	/**
+	 * A reference to the current CakeRequest
+	 */
+	protected $request;
 
+	/**
+	 * Whether or not to include controller/action CSS files
+	 */
+	protected $controllerCss = true;
+
+	/**
+	 * Whether or not to include controller/action JS files
+	 */
+	protected $controllerJs = true;
+
+	/**
+	 * Overrides base class constructor, sets properties and merges supplied user settings.
+	 */
 	public function __construct(ComponentCollection $collection, $settings = array()) {
 		$settings = array_merge($this->settings, (array)$settings);
-
-		if (isset($settings['controllersPath']) && !empty($settings['controllersPath'])) {
-			if (substr($settings['controllersPath'], strlen($settings['controllersPath'])) != DS) {
-				$settings['controllersPath'] .= DS;
-			}
-		}
 
 		$this->controller = $collection->getController();
 		$this->request = $this->controller->request;
 
+		$this->_verifyControllersPath();
+
 		parent::__construct($collection, $settings);
 	}
 
-	public function getAssets() {
-		extract($this->settings);
+	/**
+	 * Changes the path to controller/action files after the component has already been initialized
+	 */
+	public function resetControllersPath($path) {
+		$this->settings['controllersPath'] = $path;
 
+		$this->verifyControllersPath();
+	}
+
+	/**
+	 * Returns an array of all async and required JS and CSS to be loaded with the current page.
+	 *
+	 * For standard requests, this includes all required JS and CSS, and all async JS and CSS files,
+	 *  as well as the Controller and Action JS and CSS files, if they exist.
+	 *
+	 * For Ajax requests, only Controller and Action CSS and JS files are included (since the rest
+	 *  is likely already loaded from the previous non-Ajax request).
+	 *
+	 * TODO: Add a way to tell the function to load all assets even if it is an Ajax request
+	 */
+	public function getAssets() {
 		$controller = Inflector::underscore($this->controller->params['controller']);
 		$action = Inflector::underscore($this->controller->params['action']);
 
-		if ($this->request->isAjax()) {
-			$assets = array(
-				'css' => array('async' => $this->_getValidFiles(array(
-					$controllersPath.DS.$controller,
-					$controllersPath.DS.$controller.DS.$action,
-				), 'css')),
-				'js' => array('async' => $this->_getValidFiles(array(
-					$controllersPath.DS.$controller,
-					$controllersPath.DS.$controller.DS.$action,
-				), 'js')),
-			);
+		$controllerPaths = array(
+			$this->settings['controllersPath'].DS.$controller,
+			$this->settings['controllersPath'].DS.$controller.DS.$action,
+		);
+
+		if ($this->request->is('ajax')) {
+			$requiredCss = array();
+			$requiredJs = array();
+			$asyncCss = $this->controllerCss ? $this->_getValidFiles($controllerPaths, 'css') : array();
+			$asyncJs = $this->controllerJs ? $this->_getValidFiles($controllerPaths, 'js') : array();
 		} else {
-			$required = array();
-			if ($includeNamespaceJs) {
-				$required[] = $includeNamespaceJs;
-			}
-			if ($includeScriptJs) {
-				$required[] = $includeScriptJs;
-			}
-			if ($includeCssJs) {
-				$required[] = $includeCssJs;
-			}
-			if ($includeUrlJs) {
-				$required[] = $includeUrlJs;
+			$requiredCss = $this->_getValidFiles($this->settings['requiredCss'], 'css');
+			$requiredJs = $this->_getValidFiles($this->_requiredJs(), 'js');
+
+			$acss = array($this->settings['asyncCss']);
+			if ($this->controllerCss) {
+				$acss[] = $controllerPaths;
 			}
 
-			$requiredJs = array_merge($requiredJs, $required);
+			$ajs = array($this->settings['asyncJs']);
+			if ($this->controllerJs) {
+				$ajs[] = $controllerPaths;
+			}
 
-			$assets = array(
-				'css' => array(
-					'required' => $requiredCss,
-					'async' => $this->_getValidFiles(array(
-						$mainCss,
-						$controllersPath.DS.$controller,
-						$controllersPath.DS.$controller.DS.$action,
-					), 'css'),
-				),
-				'js' => array(
-					'required' => $requiredJs,
-					'async' => $this->_getValidFiles(array(
-						$mainJs,
-						$controllersPath.DS.$controller,
-						$controllersPath.DS.$controller.DS.$action,
-					), 'js')
-				),
-			);
+			$asyncCss = $this->_getValidFiles($acss, 'css');
+			$asyncJs = $this->_getValidFiles($ajs, 'js');
 		}
+
+		$assets = array(
+			'css' => array(
+				'required' => $requiredCss,
+				'async' => $asyncCss,
+			),
+			'js' => array(
+				'required' => $requiredJs,
+				'async' => $asyncJs,
+			)
+		);
 
 		return $assets;
 	}
 
+	/**
+	 * Validates and standardizes the provided controllersPath setting for use with the component
+	 */
+	private function _verifyControllersPath() {
+		if (empty($settings['controllersPath'])) {
+			$this->controllerCss = false;
+			$this->controllerJs = false;
+			return;
+		}
+
+		if (substr($settings['controllersPath'], strlen($settings['controllersPath'])) != DS) {
+			$settings['controllersPath'] .= DS;
+		}
+
+		// Check that /js/$controllersPath exists or set $this->controllerJs to false
+		// Check that /css/$controllersPath exists or set $this->controllerCss to false
+	}
+
+	/**
+	 * returns the internal required JS merged with the configured prerequisite JS files
+	 */
+	private function _requiredJs() {
+		$appRequired = array(
+			$this->settings['namespaceJs'],
+			$this->settings['scriptJs'],
+			$this->settings['cssJs'],
+			$this->settings['urlJs']
+		);
+
+		$required = array();
+
+		foreach ($appRequired as $path) {
+			$required[] = $path;
+		}
+
+		return array_merge($this->settings['requiredJs'], $required);
+	}
+
+	/**
+	 * Traverses a (multi-dimensional) array of files and includes all valid
+	 *  paths in a single-dimensional array which is returned.
+	 *
+	 * $files can be:
+	 * - A single path (string)
+	 * - An array of paths
+	 * - A multi-dimensional array of paths
+	 * - A mixed array of paths and arrays of paths
+	 *
+	 * The returned array will always be single-dimensional, and will only contain paths
+	 *  from $files which actually exist on the server.
+	 */
 	private function _getValidFiles($files, $fileType = 'js', $path = '') {
 		$result = array();
 

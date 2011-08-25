@@ -1,4 +1,4 @@
-var namespace = function(name, separator, container){
+var $namespace = function(name, separator, container){
   var ns = name.split(separator || '.'),
     o = container || window,
     i,

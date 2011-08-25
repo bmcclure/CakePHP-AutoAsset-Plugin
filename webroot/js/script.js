@@ -34,7 +34,6 @@
   }
 
   var $script = function(paths, idOrDone, optDone) {
-	  alert("Loading script: " + paths);
     paths = paths[push] ? paths : [paths];
     var idOrDoneIsDone = idOrDone && idOrDone.call,
         done = idOrDoneIsDone ? idOrDone : optDone,
