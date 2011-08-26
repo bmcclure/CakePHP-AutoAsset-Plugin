@@ -245,7 +245,7 @@ It also provides an excellent way to manage dependencies when asynchronously loa
 Read the full documentation at $script's repository:
 https://github.com/ded/script.js
 
-For a quick jumpstart, let's load jquery from within our app's main JavaScript file, in this case main.js:
+For a quick jumpstart, let's load jquery from within our app's main JavaScript file, in this case bootstrap.js:
 
     // Load jQuery asynchronously from webroot/js/libs/jquery.js and refer to it by the name 'jquery'
     $script('libs/jquery', 'jquery');
