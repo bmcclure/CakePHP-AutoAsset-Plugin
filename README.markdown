@@ -127,22 +127,63 @@ Or maybe you want to provide a couple of options to AssetGatherer to make it eve
 
     public $components = array(
         'AutoAsset.AssetGatherer' => array(
-            'mainJs' => 'app',
+            'asyncJs' => 'app',
             'requiredJs' => array('libs/modernizr-1.7-custom.min', 'libs/selectivizr'),
         ),
     );
 
 The full set of options you can provide to the component (and their defaults) are:
 
-*   'mainJs' ('main')                    <-- Indicates your site's main JS file is at webroot/js/main.js
-*   'mainCss' ('main')                   <-- Indicates your site's main CSS file is at webroot/css/main.css
-*   'requiredJs' (empty)                 <-- An array of required JS files to load in your <head> section
-*   'requiredCss' (empty)                <-- An array of required CSS files to load in your <head> section
-*   'controllersPath' ('controllers')    <-- The path under your media directories where controller/action files reside
-*   'includeScriptJs'                    <-- Set to false to NOT load the $script Javascript loader (NOT RECOMMENDED)
-*   'includeCssJs'                       <-- Set to false to NOT load the $css Javascript loader (NOT RECOMMENDED)
-*   'includeNamespaceJs'                 <-- Set to false to NOT load the $namespace Javascript helper
-*   'includeUrlJs'                       <-- Set to false to NOT load the $url Javascript helper
+*   'asyncJs' (Default: 'bootstrap')
+    
+    Indicates which JS files should be loaded asynchronously. This is by default a string ('bootstrap')
+    used to load the JS file from your webroot /js/bootstrap.js where you can lazy-load all of your other
+    JavaScript and CSS. You can also provide your own string or array of files to load.
+
+*   'asyncCss' (Default: null)
+
+    Indicates which CSS files should be loaded asynchronously. By default this is null so that you can simply
+    include the CSS files you'd like within bootstrap.js.
+
+*   'requiredJs' (Default: null)
+
+    Indicates which JS files should be loaded first, in the <head> section of your layout. This is usually used
+    for prerequisites that you know will always have to be loaded, and that don't overly slow down the loading
+    of your pages. Frequently you would put Modernizr and Selectivizr here, if you use them.
+
+*   'requiredCss' (Default: null)
+
+    Indicates which CSS files should be loaded first, in the <head> section of your layout. This is often used
+    to load your "main" CSS file which controls the appearance of your site. Any CSS which doesn't need to be loaded
+    already when the page is first displayed should instead go in 'asyncCss' to help speed up your site.
+
+*   'controllersPath' (Default: 'controllers')
+
+    Indicates the path relative to both your /js and /css folders where your controller/action JS and CSS files
+    reside. This can be null to turn off controller/action auto-loading functionality. Alternatively, you can 
+    leave it as-is and simply not create or utilize the /js/controllers and /css/controllers path, and
+    controller/action CSS and JS file inclusion will also be disabled.
+
+*   'scriptJs' (Default: '/auto_asset/js/script.min')
+
+    Indicates the path to the script.js loader for Javascript. You can point to your own version, or set to 
+    null to not include script.js (which will essentially disable all $script() calls and make most of this 
+    plugin useless.
+
+*   'cssJs' (Default: '/auto_asset/js/css')
+
+    Indicates the path to the css.js loader for CSS files. You can point to your own version, or set to
+    null to not include css.js (which will disable all lazy-loading of CSS files).
+
+*   'namespaceJs' (Default: '/auto_asset/js/namespace')
+
+    Indicates the path to the namespace.js helper function for Javascript. You can point to your own version, or
+    set to null to not include namespace.js (which will disable the $namespace() function in your JS files).
+
+*   'urlJs' (Default: '/auto_asset/js/url')
+
+    Indicates the path to the url.js helper function for Javascript. You can point to your own version, or set
+    to null to not include url.js (which will disable the $url() function in your JS files).
 
 Finally, in your AppController's beforeFilter() callback, add the following line:
 
