@@ -188,8 +188,8 @@ class AssetGathererComponent extends Component {
 		$result = array();
 
 		if (!is_array($files)) {
-			return file_exists(WWW_ROOT . $fileType . DS . $file)
-			 ? array(str_replace('\\', '/', $path.$file.'.'.$fileType))
+			return file_exists(WWW_ROOT . $fileType . DS . $files)
+			 ? array(str_replace('\\', '/', $path.$files.'.'.$fileType))
 			 : array();
 		}
 
