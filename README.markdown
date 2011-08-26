@@ -147,13 +147,13 @@ The full set of options you can provide to the component (and their defaults) ar
 
 *   'requiredJs' (Default: null)
 
-    Indicates which JS files should be loaded first, in the <head> section of your layout. This is usually used
+    Indicates which JS files should be loaded first, in the head section of your layout. This is usually used
     for prerequisites that you know will always have to be loaded, and that don't overly slow down the loading
     of your pages. Frequently you would put Modernizr and Selectivizr here, if you use them.
 
 *   'requiredCss' (Default: null)
 
-    Indicates which CSS files should be loaded first, in the <head> section of your layout. This is often used
+    Indicates which CSS files should be loaded first, in the head section of your layout. This is often used
     to load your "main" CSS file which controls the appearance of your site. Any CSS which doesn't need to be loaded
     already when the page is first displayed should instead go in 'asyncCss' to help speed up your site.
 
@@ -206,13 +206,13 @@ Configuring your layout
 -----------------------
 
 If you are using AssetGatherer's 'requiredJs' or 'requiredCss' options, add the following to your layout 
-somewhere within the <head> tag (and before you load other JS and CSS files):
+somewhere within the head tag (and before you load other JS and CSS files):
 
     if (isset($assets)) {
         echo $this->AssetLoader->required($assets);
     }
 
-And finally near the bottom, usually right before the closing <body> tag, add the following:
+And finally near the bottom, usually right before the closing body tag, add the following:
 
     if (isset($assets)) {
         echo $this->AssetLoader->load($assets);
@@ -298,12 +298,17 @@ $url
 
 An attempt at a cake-like way to resolve URLs for JavaScript.
 
-To give it a hand, add the following within the <head> of your layout:
+To give it a hand, add the following within the head section of your layout:
 
-<base href="<?php echo Router::url('/', true); ?>">
+    <base href="<?php echo Router::url('/', true); ?>">
 
-Now you can simply call $url('/users/add') which will return the absolute URL to the 'add' 
-action of the 'users' controller.
+Now you can simply call:
+
+    $url('/users/add') // Returns something like http://yourdomain.com/users/add in this case)
+
+which will return the absolute URL to the 'add' action of the 'users' controller, wherever that may be.
+
+The magic is thanks to the "base" tag you added earlier which points $url to the root of your CakePHP installation.
 
 
 Final Notes
