@@ -298,15 +298,21 @@ $url
 
 An attempt at a cake-like way to resolve URLs for JavaScript.
 
-To give it a hand, add the following within the head section of your layout:
+To give it a hand, if you're using HTML5 add the following within the head section of your layout:
 
     <base href="<?php echo Router::url('/', true); ?>">
+
+If you don't add the base tag, or if you're not using HTML5 yet, the $url function will try to figure out
+the base URL on its own.
 
 Now you can simply call:
 
     $url('/users/add') // Returns something like http://yourdomain.com/users/add in this case)
 
 which will return the absolute URL to the 'add' action of the 'users' controller, wherever that may be.
+
+You can also pass a full, absolute URL into $url and it will simply spit the URL back out at you, meaning you can
+pass ALL urls through $url() and you'll always get a valid, absolute URL returned.
 
 The magic is thanks to the "base" tag you added earlier which points $url to the root of your CakePHP installation.
 
