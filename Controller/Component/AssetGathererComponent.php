@@ -73,7 +73,7 @@ class AssetGathererComponent extends Component {
 	public function resetControllersPath($path) {
 		$this->settings['controllersPath'] = $path;
 
-		$this->verifyControllersPath();
+		$this->_verifyControllersPath();
 	}
 
 	/**
