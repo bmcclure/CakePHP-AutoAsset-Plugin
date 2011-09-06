@@ -137,14 +137,14 @@ class AssetGathererComponent extends Component {
 	 * Validates and standardizes the provided controllersPath setting for use with the component
 	 */
 	private function _verifyControllersPath() {
-		if (empty($settings['controllersPath'])) {
+		if (empty($this->settings['controllersPath'])) {
 			$this->controllerCss = false;
 			$this->controllerJs = false;
 			return;
 		}
 
-		if (substr($settings['controllersPath'], strlen($settings['controllersPath'])) != DS) {
-			$settings['controllersPath'] .= DS;
+		if (substr($this->settings['controllersPath'], strlen($this->settings['controllersPath'])) != DS) {
+			$this->settings['controllersPath'] .= DS;
 		}
 
 		// Check that /js/$controllersPath exists or set $this->controllerJs to false
