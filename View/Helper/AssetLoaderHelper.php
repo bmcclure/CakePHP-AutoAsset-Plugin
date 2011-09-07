@@ -73,10 +73,10 @@ class AssetLoaderHelper extends AppHelper {
 	 */
 	public function load($assets) {
 		$output = '';
+		$output .= '$script.path = \'/js/\';';
+		$output .= '$css.path = \'/css/\';';
 
 		if (isset($assets['css']['async']) && (!empty($assets['css']['async']))) {
-			$output .= '$css.path = \'/css/\';';
-
 			foreach ($assets['css']['async'] as $asset) {
 				if (!empty($output)) {
 					$output .= "\n";
@@ -98,8 +98,6 @@ class AssetLoaderHelper extends AppHelper {
 			if (!empty($output)) {
 				$output .= "\n";
 			}
-
-			$output .= '$script.path = \'/js/\';';
 
 			foreach ($assets['js']['async'] as $asset) {
 				if (!empty($output)) {
