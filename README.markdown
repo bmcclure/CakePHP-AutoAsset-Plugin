@@ -156,6 +156,12 @@ The full set of options you can provide to the component (and their defaults) ar
     Indicates which CSS files should be loaded first, in the head section of your layout. This is often used
     to load your "main" CSS file which controls the appearance of your site. Any CSS which doesn't need to be loaded
     already when the page is first displayed should instead go in 'asyncCss' to help speed up your site.
+    
+*   'globals' (Default: null)
+
+    Can contain an associative array of key and value pairs that will be output as Javascript variables available
+    to all other JavaScript files. Be careful not to overwrite any important variables here. You can choose where
+    in your script these are output using the AssetLoaderHelper.
 
 *   'controllersPath' (Default: 'controllers')
 
@@ -215,8 +221,19 @@ somewhere within the head tag (and before you load other JS and CSS files):
 And finally near the bottom, usually right before the closing body tag, add the following:
 
     if (isset($assets)) {
+        echo $this->AssetLoader->globals($assets);
         echo $this->AssetLoader->load($assets);
     }
+    
+You can call the functions anywhere in your layout that you would like, but it is recommended to follow the
+above pattern for maximum performance.
+
+The main exception is if any of your 'requiredJs' files rely on your defined 'globals'. In that case, call the
+globals() function before the required() function.
+
+Also note that if you do not call required() before calling load(), load() will also load all of the required files
+for you. Thus, if you'd prefer to load everything before the closing body tag, you can simply omit the required()
+function call from the head.
 
 
 The end result
