@@ -21,7 +21,7 @@ class AssetLoaderHelper extends AppHelper {
 	 * Returns a string containing the HTML output for the required Javascript
 	 *  and CSS files referenced within $assets
 	 */
-	public function required($assets) {
+	public function required(&$assets) {
 		$output = '';
 
 		if ($this->requiredDone) {
@@ -65,16 +65,37 @@ class AssetLoaderHelper extends AppHelper {
 		return $output;
 	}
 
+	public function globals(&$assets) {
+		$output = '';
+
+		if (!isset($assets['globals']) || !is_array($assets['globals'])) {
+			return $output;
+		}
+
+		foreach ($assets['globals'] as $key => $value) {
+			if (!empty($output)) {
+				$output .= "\n";
+			}
+
+			$output .= 'var '.$key.' = '.$value.';';
+		}
+
+		$output = $this->Html->scriptBlock($output, array('inline' => true));
+
+		return $output;
+	}
+
 	/**
 	 * Returns the HTML output to lazy-load the configured Javascript and Css
 	 *
 	 * Also includes the required CSS and JS if it has not already been output with the
 	 *  required($assets) function, since they need to appear before the async assets.
 	 */
-	public function load($assets) {
+	public function load(&$assets) {
 		$output = '';
+
+		$output .= '$css.path = \'/css/\';'."\n";
 		$output .= '$script.path = \'/js/\';';
-		$output .= '$css.path = \'/css/\';';
 
 		if (isset($assets['css']['async']) && (!empty($assets['css']['async']))) {
 			foreach ($assets['css']['async'] as $asset) {

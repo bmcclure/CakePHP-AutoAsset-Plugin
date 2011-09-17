@@ -26,6 +26,7 @@ class AssetGathererComponent extends Component {
 		'asyncCss' => null, // (null, string, array)
 		'requiredJs' => null, // (null, string, array)
 		'requiredCss' => null, // (null, string, array)
+		'globals' => null, // (null, associative array)
 		'controllersPath' => 'controllers', // (string)
 		'scriptJs' => '/auto_asset/js/script.min', // (null, string)
 		'cssJs' => '/auto_asset/js/css', // (null, string)
@@ -103,7 +104,7 @@ class AssetGathererComponent extends Component {
 			$asyncJs = $this->controllerJs ? $this->_getValidFiles($controllerPaths, 'js') : array();
 		} else {
 			$requiredCss = $this->_getValidFiles($this->settings['requiredCss'], 'css');
-			$requiredJs = $this->_getValidFiles($this->_requiredJs(), 'js');
+			$requiredJs = array_merge($this->_requiredJs(), $this->_getValidFiles($this->settings['requiredJs'], 'js'));
 
 			$acss = array($this->settings['asyncCss']);
 			if ($this->controllerCss) {
@@ -129,6 +130,10 @@ class AssetGathererComponent extends Component {
 				'async' => $asyncJs,
 			)
 		);
+
+		if (!is_null($this->settings['globals'])) {
+			$assets['globals'] = $this->settings['globals'];
+		}
 
 		return $assets;
 	}
@@ -168,7 +173,7 @@ class AssetGathererComponent extends Component {
 			$required[] = $path;
 		}
 
-		return array_merge($this->settings['requiredJs'], $required);
+		return $required;
 	}
 
 	/**
