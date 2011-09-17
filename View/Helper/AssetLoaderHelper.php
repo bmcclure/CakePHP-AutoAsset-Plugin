@@ -77,7 +77,19 @@ class AssetLoaderHelper extends AppHelper {
 				$output .= "\n";
 			}
 
-			$output .= 'var '.$key.' = '.$value.';';
+			$output .= 'var '.$key.' = ';
+
+			if (is_array($value)) {
+				$output .= json_encode($value);
+			} elseif (is_bool($value)) {
+				$output .= ($value) ? 'true' : 'false';
+			} elseif (is_string($value)) {
+				$output .= '\''.$value.'\'';
+			} else {
+				$output .= $value;
+			}
+
+			$output .= ';';
 		}
 
 		$output = $this->Html->scriptBlock($output, array('inline' => true));
