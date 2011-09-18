@@ -193,9 +193,11 @@ class AssetGathererComponent extends Component {
 		$result = array();
 
 		if (!is_array($files)) {
-			return file_exists(WWW_ROOT . $fileType . DS . $files)
-			 ? array(str_replace('\\', '/', $path.$files.'.'.$fileType))
-			 : array();
+			return ($this->_isAbsoluteUrl($files))
+				? ($this->_isValid(WWW_ROOT . $fileType . DS . $files.'.'.$fileType))
+					? array(str_replace('\\', '/', $path.$files))
+					: array()
+				: array();
 		}
 
 		foreach ($files as $file) {
@@ -204,8 +206,14 @@ class AssetGathererComponent extends Component {
 				continue;
 			}
 
+			if ($this->_isAbsoluteUrl($file)) {
+				$result[] = $file;
+
+				continue;
+			}
+
 			$file = $path . $file;
-			if (file_exists(WWW_ROOT . $fileType . DS . $file . '.' . $fileType)) {
+			if ($this->_isValid(WWW_ROOT . $fileType . DS . $file . '.' . $fileType)) {
 				$file = str_replace('\\', '/', $file);
 
 				$result[] = $file;
@@ -213,6 +221,22 @@ class AssetGathererComponent extends Component {
 		}
 
 		return $result;
+	}
+
+	private function _isAbsoluteUrl($path) {
+		if ((substr($path, 0, 7) != 'http://') && (substr($path, 0, 8) != 'https://')) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private function _isValid($path) {
+		if ($this->_isAbsoluteUrl($path)) {
+			return true;
+		}
+
+		return file_exists($path);
 	}
 }
 ?>
