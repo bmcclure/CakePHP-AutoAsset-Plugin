@@ -77,6 +77,10 @@ class AssetGathererComponent extends Component {
 		$this->_verifyControllersPath();
 	}
 
+	public function setGlobal($name, $value = null) {
+		$this->settings['globals'][$name] = $value;
+	}
+
 	/**
 	 * Returns an array of all async and required JS and CSS to be loaded with the current page.
 	 *
