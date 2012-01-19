@@ -32,6 +32,7 @@ class AssetGathererComponent extends Component {
 		'cssJs' => '/auto_asset/js/css', // (null, string)
 		'namespaceJs' => '/auto_asset/js/namespace', // (null, string)
 		'urlJs' => '/auto_asset/js/url', // (null, string)
+		'theme' => null // (null, string)
 	);
 
 	/**
@@ -64,7 +65,6 @@ class AssetGathererComponent extends Component {
 		$this->request = $this->controller->request;
 
 		$this->_verifyControllersPath();
-
 		parent::__construct($collection, $settings);
 	}
 
@@ -122,6 +122,7 @@ class AssetGathererComponent extends Component {
 
 			$asyncCss = $this->_getValidFiles($acss, 'css');
 			$asyncJs = $this->_getValidFiles($ajs, 'js');
+
 		}
 
 		$assets = array(
@@ -196,9 +197,11 @@ class AssetGathererComponent extends Component {
 	private function _getValidFiles($files, $fileType = 'js', $path = '') {
 		$result = array();
 
+		$themePrefix = is_null($this->settings['theme'])?'':'theme'.DS.$this->settings['theme'].DS;
+
 		if (!is_array($files)) {
 			return ($this->_isAbsoluteUrl($files))
-				? ($this->_isValid(WWW_ROOT . $fileType . DS . $files.'.'.$fileType))
+				? ($this->_isValid(WWW_ROOT . $themePrefix . $fileType . DS . $files.'.'.$fileType))
 					? array(str_replace('\\', '/', $path.$files))
 					: array()
 				: array();
@@ -217,7 +220,7 @@ class AssetGathererComponent extends Component {
 			}
 
 			$file = $path . $file;
-			if ($this->_isValid(WWW_ROOT . $fileType . DS . $file . '.' . $fileType)) {
+			if ($this->_isValid(WWW_ROOT . $themePrefix . $fileType . DS . $file . '.' . $fileType)) {
 				$file = str_replace('\\', '/', $file);
 
 				$result[] = $file;
@@ -239,7 +242,6 @@ class AssetGathererComponent extends Component {
 		if ($this->_isAbsoluteUrl($path)) {
 			return true;
 		}
-
 		return file_exists($path);
 	}
 }

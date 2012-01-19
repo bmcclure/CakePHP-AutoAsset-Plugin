@@ -106,8 +106,13 @@ class AssetLoaderHelper extends AppHelper {
 	public function load(&$assets) {
 		$output = '';
 
-		$output .= '$css.path = \'/css/\';'."\n";
-		$output .= '$script.path = \'/js/\';';
+		if ($this->theme) {
+			$output .= '$css.path = \'/theme/'.$this->theme.'/css/\';'."\n";
+			$output .= '$script.path = \'/theme/'.$this->theme.'/js/\';';
+		} else {
+			$output .= '$css.path = \'/css/\';'."\n";
+			$output .= '$script.path = \'/js/\';';
+		}
 
 		if (isset($assets['css']['async']) && (!empty($assets['css']['async']))) {
 			foreach ($assets['css']['async'] as $asset) {
