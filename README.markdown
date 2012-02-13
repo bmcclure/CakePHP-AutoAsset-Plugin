@@ -38,8 +38,8 @@ it all into your views and layouts.
 Requirements
 ============
 
-*   CakePHP 2.0 Beta or greater (CakePHP 1.3 is supported in the 1.x branch)
-*   PHP 5.2+ (You should already have it if you're using CakePHP 2.x!)
+*   CakePHP 2.0 or greater (CakePHP 1.3 is supported in the outdated 1.x branch)
+*   PHP 5.3+ (Might work on 5.2)
 
 
 Installation
@@ -57,7 +57,8 @@ Manual
 Directly From GitHub
 --------------------
 
-Simply clone this repository to your CakePHP application under app\Plugin\AutoAsset
+Simply clone this repository to your CakePHP application under app\Plugin\AutoAsset. If your app is 
+version-controlled with Git already, then you can add AutoAsset as a submodule.
 
 
 For CakePHP 2.0 users
@@ -144,6 +145,10 @@ The full set of options you can provide to the component (and their defaults) ar
 
     Indicates which CSS files should be loaded asynchronously. By default this is null so that you can simply
     include the CSS files you'd like within bootstrap.js.
+    
+*   'asyncLess' (Default: null)
+
+    Works the same as asyncCss, only it loads a .less file using LESS instead.
 
 *   'requiredJs' (Default: null)
 
@@ -157,11 +162,125 @@ The full set of options you can provide to the component (and their defaults) ar
     to load your "main" CSS file which controls the appearance of your site. Any CSS which doesn't need to be loaded
     already when the page is first displayed should instead go in 'asyncCss' to help speed up your site.
     
+*   'requiredLess' (Default: null)
+
+    Works the same as the requiredCss option above, only for .less files.
+    
 *   'globals' (Default: null)
 
     Can contain an associative array of key and value pairs that will be output as Javascript variables available
     to all other JavaScript files. Be careful not to overwrite any important variables here. You can choose where
     in your script these are output using the AssetLoaderHelper.
+    
+*   'meta' (Default: null)
+
+    Contains an array of arrays containing three values (the same values that HtmlHelper->meta() accepts. The best
+    way to use this setting is to utilize AssetGatherer's meta() function, since it offers a lot of helpful
+    functionality before adding the parameters to this setting.
+    
+    The suggested way to use it is to call AssetGatherer->meta() the exact same way you would with HtmlHelper, but
+    do it in your controller's beforeFilter (or in the AppController).
+    
+    There are many shortcuts for the available meta tags that make it very handy to use. They work much like the
+    existing shortcuts for 'icon', 'keywords', 'description', etc. You can use the existing shortcuts as well as 
+    new shortcuts through the same function.
+    
+    The new shortcuts are:
+    *   'author'
+    
+        Use 'author' as the first value, and a URL for the second value. If the URL is left null, '/humans.txt'
+        will be used as a convenient default.
+        
+    *   'viewport'
+    
+        Use 'viewport' as the first parameter, and supply the 'content' value as the second parameter. If the
+        second parameter is left null, 'width=device-width, initial-scale=1' is used as a standards-based default.
+        
+    *   'sitemap'
+        
+        Use 'sitemap' as the first parameter, and the URL to your sitemap file as the second. If the URL is left
+        null, '/sitemap.xml' will be supplied as a default. You can optionally supply a custom 'title' in the
+        options array (third parameter).
+        
+    *   'search'
+        
+        Supply the meta tag needed for an OpenSearch definition file. Use 'search' as the first paraemter, and 
+        the path to your opensearch definition file as the second. If the path is left null, '/opensearch.xml'
+        will be used as a default. You can also supply a custom 'title' in the options parameter (third param)
+        if you do not wish to use 'Search'.
+        
+    *   'canonical'
+        
+        Supply the coninical URL as the second parameter (This might be the current URL with parameters stripped
+        off, for example.
+        
+    *   'shortlink'
+        
+        Ideally, this should contain the URL of the shortest possible link to get to the current page. Supply
+        it for the second parameter.
+        
+    *   'pingback'
+        
+        Supply your pingback service URL in the second parameter.
+        
+    *   'imagetoolbar'
+        
+        Supply 'false' in the second parameter to turn the IE6 image toolbar off.
+        
+    *   'robots'
+        
+        Supply the 'content' in the second parameter. If left empty, 'content' will be set to 'noindex' which should
+        be set on pages you do not want search engines to index.
+        
+    *   'dns-prefetch'
+        
+        Supply a domain name in the second parameter and it will be prefetched so that subsequent requests to it will
+        already be resolved.
+        
+    *   'og'
+        
+        Supply 'og' for the first parameter, and a keyed array of OpenGraph keys and values, such as:
+        
+        array(
+            'title' => 'My Title',
+            'description' => 'Some description...',
+            'image' => 'http://some.image/url.png'
+        )
+        
+        This will be converted to individual meta tags such that the first one would be 'og:title' with a content 
+        value of 'My Title'.
+        
+    *   'og:anything'
+        
+        Supply any OpenGraph key as the first parameter, and the corresponding value as the second parameter. Any
+        additional attributes needed can be supplied in the third parameter as a keyed array.
+    
+    *   'application-name'
+        
+        Used for pinning your website to the Windows 7 taskbar. This is what the app will be listed as. Supply
+        the name of the application as the second parameter.
+        
+    *   'msapplication-tooltip'
+    
+        Supply the description for the tooltip as the second parameter.
+        
+    *   'msapplication-starturl'
+        
+        Supply the base (starting) URL of your application as the second parameter.
+        
+    *   'msapplication-task'
+    
+        Call this for each task you want listed with your application in the taskbar. The second parameter
+        should be a keyed array containing 'name', 'action', and 'icon'. 'name' should be the name of the task.
+        'action' should be the URL for the task. 'icon' should be the URL of an icon to display next to the task
+        name.
+
+*   'earlyMeta' (Default: null)
+
+    This is exactly the same as 'meta', but it meant to be called at the top of <head> for the tags which need to be
+    in the first 1024 bytes. To add tags to this field, use the same calls to meta() as described in the 'meta' 
+    section abobe, but either (1) add 'early' => true to the third parameter's array, or supply true for the fourth
+    parameter. The effect will be the same as normal, except it will end up in 'earlyMeta' instead of 'meta'
 
 *   'controllersPath' (Default: 'controllers')
 
@@ -190,8 +309,18 @@ The full set of options you can provide to the component (and their defaults) ar
 
     Indicates the path to the url.js helper function for Javascript. You can point to your own version, or set
     to null to not include url.js (which will disable the $url() function in your JS files).
+    
+*   'lessLib' (Default: '/auto_asset/js/less-1.2.1.min')
 
-Finally, in your AppController's beforeFilter() callback, add the following line:
+    Indicated the path to the LESS JavaScript library, which will be used for processing of .less files. If you do
+    not plan to use .less files, you can set lessLib and lessJs to null so that the files are not loaded.
+    
+*   'lessJs' (Default: '/auto_asset/js/less')
+
+    Indicates the path to the less.js helper function for the LESS library. It is used when asynchronously loading
+    .less files.
+
+Finally, in your AppController's beforeFilter() or beforeRender() callback, add the following line:
 
     $this->set('assets', $this->AssetGatherer->getAssets());
 
@@ -214,15 +343,35 @@ Configuring your layout
 If you are using AssetGatherer's 'requiredJs' or 'requiredCss' options, add the following to your layout 
 somewhere within the head tag (and before you load other JS and CSS files):
 
-    if (isset($assets)) {
-        echo $this->AssetLoader->required($assets);
-    }
+    echo $this->AssetLoader->required();
+
+You can also pass in a string indicating which type of required file to load ('css', 'less', or 'js') or an 
+array of strings. If you wish to use a custom helper when the function calls the script() and css() function,
+you can pass one in the second parameter. AutoAsset already uses a custom helper to load .less files, so you
+don't need to worry about that. You can load certain types of assets, and then call required() later on to 
+output only the types which have out already been output.
+
+Additionally, use the following function near the top of your <head> to output all meta tags defined in your 
+controllers:
+
+    echo $this->AssetLoader->meta(true);
+    
+Then use this function a bit further down to output the rest of your meta tags (still within <head>):
+
+    echo $this->AssetLoader->meta();
+    
+You can also output a valid <base> tag for your site's base URL with the following function:
+
+    echo $this->AssetLoader->base();
+    
+You can optionally supply a URL as the first parameter, and if you want it to be self-closing (not required
+in HTML5) then pass false for the second parameter.
 
 And finally near the bottom, usually right before the closing body tag, add the following:
 
     if (isset($assets)) {
-        echo $this->AssetLoader->globals($assets);
-        echo $this->AssetLoader->load($assets);
+        echo $this->AssetLoader->globals();
+        echo $this->AssetLoader->load();
     }
     
 You can call the functions anywhere in your layout that you would like, but it is recommended to follow the
@@ -287,10 +436,20 @@ $css is my take on the $script of the CSS world... I know, hard to imagine, righ
 Use it to lazy-load CSS files just like $script loads JS files, so you can do stuff like this:
 
     // Load a script and its related CSS data at the same time
-    $css('libs/jquerytools/overlay', 'overlay');
+    $css('libs/jquerytools/overlay');
     $script('libs/jquerytools/overlay', 'overlay');
+    
+Callbacks do not work properly for stylesheets, so don't bother naming or defining callbacks for your CSS
+files at this time. They will load immediately and your content will be styles as soon as they are loaded.
 
-Some work is still required to get CSS callbacks working properly.
+$less
+-----
+
+$less works the exact same as $css, except it asynchronously loads .less files instead, using the
+LESS Javascript library. Nothing different is needed when calling the files. To load 'app.less' from your
+'css' directory, use the following JavaScript:
+    
+    $less('app');
 
 $namespace
 ----------
@@ -318,6 +477,12 @@ An attempt at a cake-like way to resolve URLs for JavaScript.
 To give it a hand, if you're using HTML5 add the following within the head section of your layout:
 
     <base href="<?php echo Router::url('/', true); ?>">
+    
+Or since you're already using the AssetLoader helper, simply call:
+
+    <?php echo $this->AssetLoader->base(); ?>
+    
+And a proper <base> tag will be output.
 
 If you don't add the base tag, or if you're not using HTML5 yet, the $url function will try to figure out
 the base URL on its own.
