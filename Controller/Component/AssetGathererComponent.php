@@ -24,14 +24,20 @@ class AssetGathererComponent extends Component {
 	public $settings = array(
 		'asyncJs' => 'bootstrap', // (null, string, array)
 		'asyncCss' => null, // (null, string, array)
+		'asyncLess' => null, // (null, string, array)
 		'requiredJs' => null, // (null, string, array)
 		'requiredCss' => null, // (null, string, array)
+		'requiredLess' => null, // (null, string, array)
 		'globals' => null, // (null, associative array)
+		'meta' => null, // (null, array of arrays matching the three parameters allowed by HtmlHelper->meta())
+		'earlyMeta' => null, // (same as meta, but meant to be output at the top of the page)
 		'controllersPath' => 'controllers', // (string)
 		'scriptJs' => '/auto_asset/js/script.min', // (null, string)
 		'cssJs' => '/auto_asset/js/css', // (null, string)
 		'namespaceJs' => '/auto_asset/js/namespace', // (null, string)
 		'urlJs' => '/auto_asset/js/url', // (null, string)
+		'lessLib' => '/auto_asset/js/less-1.2.1.min', // (null, string)
+		'lessJs' => '/auto_asset/js/less', // (null, string)
 	);
 
 	/**
@@ -53,6 +59,8 @@ class AssetGathererComponent extends Component {
 	 * Whether or not to include controller/action JS files
 	 */
 	protected $controllerJs = true;
+	
+	protected $controllerLess = true;
 
 	/**
 	 * Overrides base class constructor, sets properties and merges supplied user settings.
@@ -78,7 +86,164 @@ class AssetGathererComponent extends Component {
 	}
 
 	public function setGlobal($name, $value = null) {
+		if (!is_array($this->settings['globals'])) {
+			$this->settings['globals'] = (array)$this->settings['globals'];
+		}
 		$this->settings['globals'][$name] = $value;
+	}
+	
+	public function js($path, $async = false) {
+		$setting = ($async) ? 'asyncJs' : 'requiredJs';
+		
+		if (!is_array($this->settings[$setting])) {
+			$this->settings[$setting] = (array)$this->settings[$setting];
+		}
+		$this->settings[$setting][] = $path;
+	}
+	
+	public function css($path, $async = false) {
+		$setting = ($async) ? 'asyncCss' : 'requiredCss';
+		
+		if (!is_array($this->settings[$setting])) {
+			$this->settings[$setting] = (array)$this->settings[$setting];
+		}
+		$this->settings[$setting][] = $path;
+	}
+	
+	public function less($path, $async = false) {
+		$setting = ($async) ? 'asyncLess' : 'requiredLess';
+		
+		if (!is_array($this->settings[$setting])) {
+			$this->settings[$setting] = (array)$this->settings[$setting];
+		}
+		$this->settings[$setting][] = $path;
+	}
+	
+	public function meta($type, $url = null, $options = array(), $early = false) {
+		if (isset($options['early'])) {
+			$early = $options['early'];
+			
+			unset($options['early']);
+		}
+
+		$setting = $early ? 'earlyMeta' : 'meta';
+		
+		if (!is_array($this->settings[$setting])) {
+			$this->settings[$setting] = (array)$this->settings[$setting];
+		}
+		
+		if (is_array($type)) {
+			$this->settings[$setting][] = array($type, $url, $options);
+			
+			return;
+		}
+		
+		$types = array(
+			'author' => array('name' => 'author', 'link' => ''),
+			'viewport' => array('name' => 'viewport', 'content' => ''),
+			'sitemap' => array('type' => 'application/xml', 'rel' => 'sitemap', 'title' => Inflector::humanize($type), 'link' => ''),
+			'search' => array('type' => 'application/opensearchdescription+xml', 'rel' => 'search', 'title' => Inflector::humanize($type), 'link' => $url),
+			'application-name' => array('name' => 'application-name', 'content' => $url),
+			'msapplication-tooltip' => array('name' => 'msapplication-tooltip', 'content' => $url),
+			'msapplication-starturl' => array('name' => 'msapplication-starturl', 'content' => $url),
+			'msapplication-task' => array('name' => 'msapplication-task', 'content' => 'name=%s;action-uri=%s;icon-uri=%s'),
+			'canonical' => array('rel' => 'canonical', 'link' => $url),
+			'shortlink' => array('rel' => 'shortlink', 'link' => $url),
+			'pingback' => array('rel' => 'pingback', 'link' => $url),
+			'imagetoolbar' => array('http-equiv' => 'imagetoolbar', 'content' => $url),
+			'robots' => array('name' => 'robots', 'content' => ''),
+			'dns-prefetch' => array('rel' => 'dns-prefetch', 'link' => $url),
+		);
+		
+		switch ($type) {
+			case 'author':
+				$types['author']['link'] = (empty($url)) ? '/humans.txt' : $url;
+				break;
+			case 'viewport':
+				$types['viewport']['content'] = (empty($url)) ? 'width=device-width, initial-scale=1' : $url;
+				break;
+			case 'sitemap':
+				$types['sitemap']['link'] = (empty($url)) ? '/sitemap.xml' : $url;
+				break;
+			case 'search':
+				$types['search']['link'] = (empty($url)) ? '/opensearch.xml' : $url;
+				break;
+			case 'robots':
+				$types['robots']['content'] = (empty($url)) ? 'noindex' : $url;
+				break;
+			case 'msapplication-task':
+				$name = '';
+				if (isset($options['name'])) {
+					$name = $options['name'];
+					unset($options['name']);
+				}
+				
+				$action = '';
+				if (isset($url)) {
+					$action = $url;
+				} elseif (isset($options['action'])) {
+					$ation = $options['action'];
+					unset($options['action']);
+				} elseif (isset($options['action-uri'])) {
+					$action = $options['action-uri'];
+					unset($options['action-uri']);
+				}
+				
+				$icon = '';
+				if (isset($options['icon'])) {
+					$icon = $options['icon'];
+					unset($options['icon']);
+				} elseif (isset($options['icon-uri'])) {
+					$icon = $options['icon-uri'];
+					unset($options['icon-uri']);
+				}
+				
+				$types['msapplication-task']['content'] = sprintf($types['msapplication-task']['content'], $name, $action, $icon);
+				break;
+			case 'og':
+				if (is_array($url)) {
+					foreach ($url as $key => $val) {
+						$this->meta(array('property' => "og:$key", 'content' => $val), null, $options, $early);
+					}
+					return;
+				}
+				
+				if (is_string($options)) {
+					$type = array('property' => "og:$url", 'content' => $options);
+					$url = null;
+					$options = array();
+				} elseif (is_string($url)) {
+					$content = '';
+					if (isset($options['content'])) {
+						$content = $options['content'];
+						unset($options['content']);
+					}
+					
+					$type = array('property' => "og:$url", 'content' => $content);
+					$url = null;
+				}
+				break;
+			default:
+				if ((strlen($type) > 3) && (substr($type, 0, 3) == 'og:')) {
+					$types[$type] = array('property' => $type, 'content' => $url);
+				}
+				break;
+		}
+		
+		if (array_key_exists($type, $types)) {
+			$type = $types[$type];
+			$url = null;
+		}
+		
+		$this->settings[$setting][] = array($type, $url, $options);
+	}
+	
+	protected function _mergeSetting($setting, $value = null) {
+		if (!is_array($this->settings[$setting])) {
+			$this->settings[$setting] = empty($this->settings[$setting]) ? array() : (array)$this->settings[$setting];
+		}
+		
+		$this->settings[$setting] = array_merge($this->settings[$setting], (array)$value);
 	}
 
 	/**
@@ -104,23 +269,32 @@ class AssetGathererComponent extends Component {
 		if ($this->request->is('ajax')) {
 			$requiredCss = array();
 			$requiredJs = array();
+			$requiredLess = array();
 			$asyncCss = $this->controllerCss ? $this->_getValidFiles($controllerPaths, 'css') : array();
+			$asyncLess = $this->controllerLess ? $this->_getValidFiles($controllerPaths, 'css', '', '.less') : array();
 			$asyncJs = $this->controllerJs ? $this->_getValidFiles($controllerPaths, 'js') : array();
 		} else {
 			$requiredCss = $this->_getValidFiles($this->settings['requiredCss'], 'css');
+			$requiredLess = $this->_getValidFiles($this->settings['requiredLess'], 'css', '', '.less');
 			$requiredJs = array_merge($this->_requiredJs(), $this->_getValidFiles($this->settings['requiredJs'], 'js'));
 
-			$acss = array($this->settings['asyncCss']);
+			$acss = (array) $this->settings['asyncCss'];
 			if ($this->controllerCss) {
 				$acss[] = $controllerPaths;
 			}
+			
+			$aless = (array)$this->settings['asyncLess'];
+			if ($this->controllerLess) {
+				$aless[] = $controllerPaths;
+			}
 
-			$ajs = array($this->settings['asyncJs']);
+			$ajs = (array) $this->settings['asyncJs'];
 			if ($this->controllerJs) {
 				$ajs[] = $controllerPaths;
 			}
 
 			$asyncCss = $this->_getValidFiles($acss, 'css');
+			$asyncLess = $this->_getValidFiles($aless, 'css', '', '.less');
 			$asyncJs = $this->_getValidFiles($ajs, 'js');
 		}
 
@@ -129,14 +303,22 @@ class AssetGathererComponent extends Component {
 				'required' => $requiredCss,
 				'async' => $asyncCss,
 			),
+			'less' => array(
+				'required' => $requiredLess,
+				'async' => $asyncLess,
+			),
 			'js' => array(
 				'required' => $requiredJs,
 				'async' => $asyncJs,
 			)
 		);
 
-		if (!is_null($this->settings['globals'])) {
+		if (!empty($this->settings['globals'])) {
 			$assets['globals'] = $this->settings['globals'];
+		}
+		
+		if (!empty($this->settings['meta'])) {
+			$assets['meta'] = $this->settings['meta'];
 		}
 
 		return $assets;
@@ -149,15 +331,17 @@ class AssetGathererComponent extends Component {
 		if (empty($this->settings['controllersPath'])) {
 			$this->controllerCss = false;
 			$this->controllerJs = false;
+			
 			return;
 		}
-
+		
+		// Tack on a trailing slash if there isn't one there already
 		if (substr($this->settings['controllersPath'], strlen($this->settings['controllersPath'])) != DS) {
 			$this->settings['controllersPath'] .= DS;
 		}
-
-		// Check that /js/$controllersPath exists or set $this->controllerJs to false
-		// Check that /css/$controllersPath exists or set $this->controllerCss to false
+		
+		// TODO: Check that /js/$controllersPath exists or set $this->controllerJs to false
+		// TODO: Check that /css/$controllersPath exists or set $this->controllerCss to false
 	}
 
 	/**
@@ -165,15 +349,22 @@ class AssetGathererComponent extends Component {
 	 */
 	private function _requiredJs() {
 		$appRequired = array(
+			$this->settings['lessLib'],
 			$this->settings['namespaceJs'],
 			$this->settings['scriptJs'],
 			$this->settings['cssJs'],
-			$this->settings['urlJs']
+			$this->settings['lessJs'],
+			$this->settings['urlJs'],
+			
 		);
 
 		$required = array();
 
 		foreach ($appRequired as $path) {
+			if (empty($path)) {
+				continue;
+			}
+			
 			$required[] = $path;
 		}
 
@@ -193,20 +384,13 @@ class AssetGathererComponent extends Component {
 	 * The returned array will always be single-dimensional, and will only contain paths
 	 *  from $files which actually exist on the server.
 	 */
-	private function _getValidFiles($files, $fileType = 'js', $path = '') {
+	private function _getValidFiles($files, $fileType = 'js', $path = '', $ext = null) {
 		$result = array();
 
-		if (!is_array($files)) {
-			return ($this->_isAbsoluteUrl($files))
-				? ($this->_isValid(WWW_ROOT . $fileType . DS . $files.'.'.$fileType))
-					? array(str_replace('\\', '/', $path.$files))
-					: array()
-				: array();
-		}
-
-		foreach ($files as $file) {
+		foreach ((array) $files as $file) {
 			if (is_array($file)) {
-				$result = array_merge($result, $this->_getValidFiles($file, $fileType, $path));
+				$result = array_merge($result, $this->_getValidFiles($file, $fileType, $path, $ext));
+				
 				continue;
 			}
 
@@ -217,7 +401,14 @@ class AssetGathererComponent extends Component {
 			}
 
 			$file = $path . $file;
-			if ($this->_isValid(WWW_ROOT . $fileType . DS . $file . '.' . $fileType)) {
+			
+			if (is_null($ext)) {
+				$ext = ".$fileType";
+			}
+			
+			$ext = (substr($file, strlen($file) - strlen($ext) - 1) == $ext) ? '' : $ext;
+			
+			if ($this->_isValid(WWW_ROOT . $fileType . DS . $file . $ext)) {
 				$file = str_replace('\\', '/', $file);
 
 				$result[] = $file;

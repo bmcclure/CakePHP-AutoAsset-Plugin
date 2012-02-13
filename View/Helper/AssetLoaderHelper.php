@@ -9,75 +9,176 @@ class AssetLoaderHelper extends AppHelper {
 	/**
 	 * View helpers required by this helper
 	 */
-	public $helpers = array('Html');
+	public $helpers = array('Html', 'AutoAsset.Less');
+	
+	public $settings = array(
+		'assetsVar' => 'assets',
+	);
+	
+	var $types = array('css', 'less', 'js');
+	
+	var $typeHelpers = array(
+		'less' => 'Less',
+	);
 
 	/**
 	 * Indicates whether or not the required (prerequisite) files
 	 *  have already been output;
 	 */
-	var $requiredDone = false;
+	var $requiredDone = array(
+		'css' => false,
+		'less' => false,
+		'js' => false,
+	);
+	
+	private $_assets = array();
+/**
+ * Constructor.
+ *
+ * @access public
+ */
+    function __construct(View $View, $settings = array()) {
+		$this->settings = array_merge($this->settings, (array) $settings);
+
+        if (!isset($View->viewVars[$this->settings['assetsVar']])) {
+        	return;
+        }
+
+        $this->_assets = $View->viewVars[$this->settings['assetsVar']];
+
+		parent::__construct($View, (array)$settings);
+    }
 
 	/**
 	 * Returns a string containing the HTML output for the required Javascript
 	 *  and CSS files referenced within $assets
 	 */
-	public function required(&$assets) {
+	public function required($type = null, $helper = null) {
 		$output = '';
-
-		if ($this->requiredDone) {
+		
+		$workLeft = $this->_workLeft();
+		
+		if (!$workLeft) {
 			return $output;
 		}
-
-		if (isset($assets['css']['required'])) {
-			if (is_string($assets['css']['required'])) {
-				$assets['css']['required'] = array($assets['css']['required']);
-			}
-
-			foreach ($assets['css']['required'] as $asset) {
+		
+		if (empty($type)) {
+			$type = $this->types;
+		}
+		
+		if (is_array($type)) {
+			foreach ($type as $currentType) {
 				if (!empty($output)) {
 					$output .= "\n";
 				}
-
-				$output .= $this->Html->css($asset, null, array('inline' => true));
+				
+				$output .= $this->required($currentType, $helper);
 			}
+			
+			return $output;
 		}
-
-		if (!empty($output)) {
-			$output .= "\n";
+		
+		if (empty($helper) && isset($this->typeHelpers[$type])) {
+			$helper = $this->typeHelpers[$type];
 		}
-
-		if (isset($assets['js']['required'])) {
-			if (is_string($assets['js']['required'])) {
-				$assets['js']['required'] = array($assets['js']['required']);
-			}
-
-			foreach ($assets['js']['required'] as $asset) {
+		
+		if (is_string($helper) && is_object($this->$helper)) {
+			$helper = $this->$helper;
+		}
+		
+		if (!is_object($helper)) {
+			$helper = $this->Html;
+		}
+		
+		if (array_key_exists($type, $this->requiredDone) && $this->requiredDone[$type]) {
+			return $output;
+		}
+		
+		if (isset($this->_assets[$type]['required'])) {
+			foreach ((array) $this->_assets[$type]['required'] as $asset) {
 				if (!empty($output)) {
 					$output .= "\n";
 				}
-
-				$output .= $this->Html->script($asset, array('inline' => true));
+				
+				switch($type) {
+					case 'css':
+					case 'less':
+						$output .= $helper->css($asset, null, array('inline' => true));
+						break;
+					case 'js':
+					default:
+						$output .= $helper->script($asset, array('inline' => true));
+						break;
+				}
+				
 			}
 		}
 
-		$this->requiredDone = true;
+		$this->requiredDone[$type] = true;
 
 		return $output;
 	}
+	
+	public function base($url = null, $html5 = true) {
+		if (empty($url)) {
+			if (!empty($this->_assets['baseUrl'])) {
+				$url = $this->_assets['baseUrl'];
+			} else {
+				$url = Router::url('/', true);
+			}
+		}
+		
+		$closing = $html5 ? '' : ' /';
+		
+		$output = '<base href="'.$url.'"'.$closing.'>';
+		
+		return $output;
+	}
+	
+	public function meta($early = false) {
+		$output = '';
+		
+		$setting = $early ? 'earlyMeta' : 'meta';
+		
+		if (!isset($this->_assets[$setting])) {
+			return $output;
+		}
+		
+		foreach ((array)$this->_assets[$setting] as $meta) {
+			if (!isset($meta[0])) {
+				continue;
+			}
+			if (!isset($meta[1])) {
+				$meta[1] = null;
+			}
+			if (!isset($meta[2])) {
+				$meta[2] = array();
+			}
+			if (!empty($output)) {
+				$output .= "\n";
+			}
+			
+			$meta[2]['inline'] = true;
+			
+			$output .= $this->Html->meta($meta[0], $meta[1], $meta[2]);
+		}
+		
+		return $output;
+	}
 
-	public function globals(&$assets) {
+	public function globals() {
 		$output = '';
 
-		if (!isset($assets['globals']) || !is_array($assets['globals'])) {
+		if (!is_array($this->_assets['globals'])) {
 			return $output;
 		}
 
-		foreach ($assets['globals'] as $key => $value) {
+		foreach ($this->_assets['globals'] as $key => $value) {
 			if (!empty($output)) {
 				$output .= "\n";
 			}
 
-			$output .= 'var '.$key.' = ';
+			$output .= "var $key = ";
 
 			if (is_array($value)) {
 				$output .= json_encode($value);
@@ -103,56 +204,55 @@ class AssetLoaderHelper extends AppHelper {
 	 * Also includes the required CSS and JS if it has not already been output with the
 	 *  required($assets) function, since they need to appear before the async assets.
 	 */
-	public function load(&$assets) {
+	public function load() {
 		$output = '';
-
-		$output .= '$css.path = \'/css/\';'."\n";
-		$output .= '$script.path = \'/js/\';';
-
-		if (isset($assets['css']['async']) && (!empty($assets['css']['async']))) {
-			foreach ($assets['css']['async'] as $asset) {
-				if (!empty($output)) {
-					$output .= "\n";
-				}
-
-				$o = (is_array($asset))
-					? '[\''.implode('\', \'', $asset).'\']'
-					: '\''.$asset.'\'';
-
-				$output .= '$css('.$o.');';
-			}
+		
+		if (isset($this->_assets['css'])) {
+			$output .= "\$css.path = '/css/';\n";
 		}
-
-		if (!empty($output)) {
-			$output .= "\n";
+		if (isset($this->_assets['less'])) {
+			$output .= "\$less.path = '/css/';\n";
 		}
+		if (isset($this->_assets['js'])) {
+			$output .= "\$script.path = '/js/';\n";
+		}
+		
+		foreach ($this->types as $type) {
+			if (!empty($this->_assets[$type]['async'])) {
+				foreach ((array) $this->_assets[$type]['async'] as $asset) {
+					if (!empty($output)) {
+						$output .= "\n";
+					}
 
-		if (isset($assets['js']['async']) && (!empty($assets['js']['async']))) {
-			if (!empty($output)) {
-				$output .= "\n";
-			}
-
-			foreach ($assets['js']['async'] as $asset) {
-				if (!empty($output)) {
-					$output .= "\n";
+					$o = (is_array($asset))
+						? "['".implode("', '", $asset)."']"
+						: "'$asset'";
+					
+					if ($type == 'js') {
+						$type = 'script';
+					}
+					$output .= "\$$type($o);";
 				}
-
-				$o = (is_array($asset))
-					? '[\''.implode('\', \'', $asset).'\']'
-					: '\''.$asset.'\'';
-
-				$output .= '$script('.$o.');';
 			}
 		}
 
 		$output = $this->Html->scriptBlock($output, array('inline' => true));
 
-		if (!$this->requiredDone) {
+		if ($this->_workLeft()) {
 			$output = $this->required($assets) . "\n\n" . $output;
-			$this->requiredDone = true;
 		}
 
 		return $output;
+	}
+	
+	private function _workLeft() {
+		foreach ($this->requiredDone as $done) {
+			if (!$done) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }
 ?>
