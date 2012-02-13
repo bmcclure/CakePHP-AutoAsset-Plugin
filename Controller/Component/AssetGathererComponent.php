@@ -126,7 +126,7 @@ class AssetGathererComponent extends Component {
 			unset($options['early']);
 		}
 
-		$setting = $early ? 'earlyMeta' : 'meta';
+		$setting = ($early) ? 'earlyMeta' : 'meta';
 		
 		if (!is_array($this->settings[$setting])) {
 			$this->settings[$setting] = (array)$this->settings[$setting];
@@ -312,13 +312,11 @@ class AssetGathererComponent extends Component {
 				'async' => $asyncJs,
 			)
 		);
-
-		if (!empty($this->settings['globals'])) {
-			$assets['globals'] = $this->settings['globals'];
-		}
 		
-		if (!empty($this->settings['meta'])) {
-			$assets['meta'] = $this->settings['meta'];
+		foreach (array('globals', 'earlyMeta', 'meta') as $setting) {
+			if (!empty($this->settings[$setting])) {
+				$assets[$setting] = $this->settings[$setting];
+			}
 		}
 
 		return $assets;
