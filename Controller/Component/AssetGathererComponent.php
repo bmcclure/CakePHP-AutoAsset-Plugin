@@ -29,6 +29,7 @@ class AssetGathererComponent extends Component {
 		'requiredCss' => null, // (null, string, array)
 		'requiredLess' => null, // (null, string, array)
 		'globals' => null, // (null, associative array)
+        'conditionals' => null, // (null, array)
 		'meta' => null, // (null, array of arrays matching the three parameters allowed by HtmlHelper->meta())
 		'earlyMeta' => null, // (same as meta, but meant to be output at the top of the page)
 		'controllersPath' => 'controllers', // (string)
@@ -91,33 +92,52 @@ class AssetGathererComponent extends Component {
 		}
 		$this->settings['globals'][$name] = $value;
 	}
-	
-	public function js($path, $async = false) {
-		$setting = ($async) ? 'asyncJs' : 'requiredJs';
-		
-		if (!is_array($this->settings[$setting])) {
-			$this->settings[$setting] = (array)$this->settings[$setting];
-		}
-		$this->settings[$setting][] = $path;
-	}
-	
-	public function css($path, $async = false) {
-		$setting = ($async) ? 'asyncCss' : 'requiredCss';
-		
-		if (!is_array($this->settings[$setting])) {
-			$this->settings[$setting] = (array)$this->settings[$setting];
-		}
-		$this->settings[$setting][] = $path;
-	}
-	
-	public function less($path, $async = false) {
-		$setting = ($async) ? 'asyncLess' : 'requiredLess';
-		
-		if (!is_array($this->settings[$setting])) {
-			$this->settings[$setting] = (array)$this->settings[$setting];
-		}
-		$this->settings[$setting][] = $path;
-	}
+
+    public function js($path, $async = false, $conditional = false) {
+        if (!empty($conditional)) {
+            $this->settings['conditionals'][$conditional]['js'][] = $path;
+
+            return;
+        }
+
+        $setting = ($async) ? 'asyncJs' : 'requiredJs';
+
+        if (!is_array($this->settings[$setting])) {
+            $this->settings[$setting] = (array)$this->settings[$setting];
+        }
+
+        $this->settings[$setting][] = $path;
+    }
+
+    public function css($path, $async = false, $conditional = false) {
+        if (!empty($conditional)) {
+            $this->settings['conditionals'][$conditional]['css'][] = $path;
+
+            return;
+        }
+
+        $setting = ($async) ? 'asyncCss' : 'requiredCss';
+
+        if (!is_array($this->settings[$setting])) {
+            $this->settings[$setting] = (array)$this->settings[$setting];
+        }
+        $this->settings[$setting][] = $path;
+    }
+
+    public function less($path, $async = false, $conditional = false) {
+        if (!empty($conditional)) {
+            $this->settings['conditionals'][$conditional]['less'][] = $path;
+
+            return;
+        }
+
+        $setting = ($async) ? 'asyncLess' : 'requiredLess';
+
+        if (!is_array($this->settings[$setting])) {
+            $this->settings[$setting] = (array)$this->settings[$setting];
+        }
+        $this->settings[$setting][] = $path;
+    }
 	
 	public function meta($type, $url = null, $options = array(), $early = false) {
 		if (isset($options['early'])) {
@@ -266,6 +286,8 @@ class AssetGathererComponent extends Component {
 			$this->settings['controllersPath'].DS.$controller.DS.$action,
 		);
 
+        $conditionals = array();
+
 		if ($this->request->is('ajax')) {
 			$requiredCss = array();
 			$requiredJs = array();
@@ -274,9 +296,24 @@ class AssetGathererComponent extends Component {
 			$asyncLess = $this->controllerLess ? $this->_getValidFiles($controllerPaths, 'css', '', '.less') : array();
 			$asyncJs = $this->controllerJs ? $this->_getValidFiles($controllerPaths, 'js') : array();
 		} else {
-			$requiredCss = $this->_getValidFiles($this->settings['requiredCss'], 'css');
+			$requiredCss = $this->getRequiredCssAssets($this->settings['requiredCss']);
 			$requiredLess = $this->_getValidFiles($this->settings['requiredLess'], 'css', '', '.less');
 			$requiredJs = array_merge($this->_requiredJs(), $this->_getValidFiles($this->settings['requiredJs'], 'js'));
+
+            if (!empty($this->settings['conditionals'])) {
+                foreach ((array) $this->settings['conditionals'] as $conditional => $set) {
+                    if (!empty($set['css'])) {
+                        $set['css'] = $this->getRequiredCssAssets($set['css']);
+                    }
+                    if (!empty($set['less'])) {
+                        $set['less'] = $this->_getValidFiles($set['less'], 'css', '', '.less');
+                    }
+                    if (!empty($set['js'])) {
+                        $set['js'] = $this->_getValidFiles($set['js'], 'js');
+                    }
+                    $conditionals[$conditional] = $set;
+                }
+            }
 
 			$acss = (array) $this->settings['asyncCss'];
 			if ($this->controllerCss) {
@@ -310,7 +347,8 @@ class AssetGathererComponent extends Component {
 			'js' => array(
 				'required' => $requiredJs,
 				'async' => $asyncJs,
-			)
+			),
+            'conditionals' => $conditionals,
 		);
 		
 		foreach (array('globals', 'earlyMeta', 'meta') as $setting) {
@@ -321,6 +359,16 @@ class AssetGathererComponent extends Component {
 
 		return $assets;
 	}
+
+    private function getRequiredCssAssets($assets) {
+        $output = array();
+
+        foreach ($assets as $mediaType => $files) {
+            $output[$mediaType] = $this->_getValidFiles($files, 'css');
+        }
+
+        return $output;
+    }
 
 	/**
 	 * Validates and standardizes the provided controllersPath setting for use with the component

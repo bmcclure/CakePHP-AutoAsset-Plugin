@@ -49,6 +49,89 @@ class AssetLoaderHelper extends AppHelper {
 		parent::__construct($View, (array)$settings);
     }
 
+    public function conditional($condition = null, $type = null, $helper = null) {
+        $output = '';
+
+        if (empty($condition)) {
+            foreach (array_keys((array) $this->_assets['conditionals']) as $condition) {
+                if (!empty($output)) {
+                    $output .= "\n";
+                }
+
+                $output .= $this->conditional($condition, $type);
+            }
+
+            return $output;
+        }
+
+        if (empty($type)) {
+            foreach ($this->types as $currentType) {
+                if (!empty($output)) {
+                    $output .= "\n";
+                }
+
+                $output .= $this->conditional($condition, $currentType);
+            }
+
+            return $output;
+        }
+
+        if (empty($this->_assets['conditionals'][$condition][$type])) {
+            return $output;
+        }
+
+        $helper = $this->getHelper($helper, $type);
+
+        $output .= $this->asset($type, $this->_assets['conditionals'][$condition][$type], $helper);
+
+        if (!empty($output)) {
+            if (strpos($condition, '(') !== 0) {
+                $condition = "($condition)";
+            }
+
+            $output = "<!--[if $condition]><!-->\n\t$output\n<!--<![endif]-->";
+        }
+
+        return $output;
+    }
+
+    public function asset($type, $path, $helper) {
+        $output = '';
+
+        foreach ((array) $path as $asset) {
+            if (!empty($output)) {
+                $output .= "\n";
+            }
+
+            switch($type) {
+                case 'css':
+                case 'less':
+                    $output .= $helper->css($asset, null, array('inline' => true));
+                    break;
+                case 'js':
+                default:
+                    $output .= $helper->script($asset, array('inline' => true));
+                    break;
+            }
+        }
+    }
+
+    protected function getHelper($helper = null, $type = 'js') {
+        if (empty($helper) && isset($this->typeHelpers[$type])) {
+            $helper = $this->typeHelpers[$type];
+        }
+
+        if (is_string($helper) && is_object($this->$helper)) {
+            $helper = $this->$helper;
+        }
+
+        if (!is_object($helper)) {
+            $helper = $this->Html;
+        }
+
+        return $helper;
+    }
+
 	/**
 	 * Returns a string containing the HTML output for the required Javascript
 	 *  and CSS files referenced within $assets
@@ -77,47 +160,57 @@ class AssetLoaderHelper extends AppHelper {
 			
 			return $output;
 		}
-		
-		if (empty($helper) && isset($this->typeHelpers[$type])) {
-			$helper = $this->typeHelpers[$type];
-		}
-		
-		if (is_string($helper) && is_object($this->$helper)) {
-			$helper = $this->$helper;
-		}
-		
-		if (!is_object($helper)) {
-			$helper = $this->Html;
-		}
+
+        $helper = $this->getHelper($helper, $type);
 		
 		if (array_key_exists($type, $this->requiredDone) && $this->requiredDone[$type]) {
 			return $output;
 		}
-		
+
 		if (isset($this->_assets[$type]['required'])) {
-			foreach ((array) $this->_assets[$type]['required'] as $asset) {
-				if (!empty($output)) {
-					$output .= "\n";
-				}
-				
-				switch($type) {
-					case 'css':
-					case 'less':
-						$output .= $helper->css($asset, null, array('inline' => true));
-						break;
-					case 'js':
-					default:
-						$output .= $helper->script($asset, array('inline' => true));
-						break;
-				}
-				
-			}
+            if ($type == 'css') {
+                foreach ($this->_assets[$type]['required'] as $media => $assets) {
+                    foreach ($assets as $asset) {
+                        if (!empty($output)) {
+                            $output .= "\n";
+                        }
+
+                        $output .= $helper->css($asset, null, array('media' => $media, 'inline' => true));
+                    }
+                }
+            } else {
+                $output .= $this->loadRequiredAssets($this->_assets[$type]['required'], $type, $helper);
+            }
 		}
 
 		$this->requiredDone[$type] = true;
 
 		return $output;
 	}
+
+    private function loadRequiredAssets($assets, $type, $helper) {
+        $output = '';
+
+        foreach ((array) $assets as $asset) {
+            if (!empty($output)) {
+                $output .= "\n";
+            }
+
+            switch($type) {
+                case 'css':
+                case 'less':
+                    $output .= $helper->css($asset, null, array('inline' => true));
+                    break;
+                case 'js':
+                default:
+                    $output .= $helper->script($asset, array('inline' => true));
+                    break;
+            }
+
+        }
+
+        return $output;
+    }
 	
 	public function base($url = null, $html5 = true) {
 		if (empty($url)) {
@@ -239,7 +332,7 @@ class AssetLoaderHelper extends AppHelper {
 		$output = $this->Html->scriptBlock($output, array('inline' => true));
 
 		if ($this->_workLeft()) {
-			$output = $this->required($assets) . "\n\n" . $output;
+			$output = $this->required() . "\n\n" . $output;
 		}
 
 		return $output;
