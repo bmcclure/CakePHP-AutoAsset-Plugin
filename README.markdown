@@ -1,8 +1,22 @@
 AutoAsset Plugin
 ================
+A full-featured and extensible asset management plugin for CakePHP 2.x
 
-A CakePHP 2.x (and 1.x) plugin to help easily manage and load CSS and JS files asynchronously.
+Important Information
+=====================
 
+AutoAsset just underwent a full rewrite and its documentation has not yet been updated. In 
+addition, some functionality is as yet untested. If you're not comfortable poking around the
+source code to figure out how to use the new version, then it would be best to wait until this
+documentation has been updated.
+
+Some of the cool new features are:
+*  New OO library, 'AssetLib', included and used throughout AutoAsset.
+*  Asset objects are assigned to any number of AssetBlock objects. AssetBlocks then get rendered out in a view or layout.
+*  AssetGathererComponent is now AssetCollectorComponent and works in a much more OO-fashion
+*  AssetLoaderHelper is now AssetRendererHelper and allows for much more flexibility and extensibility
+*  Additional flexibility is introduced in that you can specify and use custom asset types easily
+*  AssetLib has a small library of exceptions thrown to help recover from exceptional circumstances
 
 Why?
 ====
