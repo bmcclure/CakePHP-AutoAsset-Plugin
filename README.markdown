@@ -12,10 +12,11 @@ documentation has been updated.
 
 Some of the cool new features are:
 *  New OO library, 'AssetLib', included and used throughout AutoAsset.
-*  Asset objects are assigned to any number of AssetBlock objects. AssetBlocks then get rendered out in a view or layout.
+*  Assets are assigned to any number of AssetBlock objects.
+*  AssetBlocks contain custom settings for the block and are rendered in a layout or view
+*  AssetRenderer objects are responsible for outputting AssetBlocks (and individual assets)
 *  AssetGathererComponent is now AssetCollectorComponent and works in a much more OO-fashion
 *  AssetLoaderHelper is now AssetRendererHelper and allows for much more flexibility and extensibility
-*  Additional flexibility is introduced in that you can specify and use custom asset types easily
 *  AssetLib has a small library of exceptions thrown to help recover from exceptional circumstances
 
 Why?
