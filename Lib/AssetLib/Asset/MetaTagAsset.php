@@ -11,6 +11,11 @@ class MetaTagAsset extends BaseAsset implements AssetInterface {
     private $definition;
 
     /**
+     * @var bool
+     */
+    private $multi = FALSE;
+
+    /**
      * @param $type
      * @param $url
      * @param array $options
@@ -18,7 +23,7 @@ class MetaTagAsset extends BaseAsset implements AssetInterface {
      * @param string $helperMethod
      */
     public function __construct($type, $url, $options = array()) {
-        $this->definition = $this->build($type, $url, $options);
+        $this->build($type, $url, $options);
 
         parent::__construct();
     }
@@ -38,7 +43,7 @@ class MetaTagAsset extends BaseAsset implements AssetInterface {
      */
     protected function build($type, $url = NULL, $options = array()) {
         if (is_array($type)) {
-            return array($type, $url, $options);
+            $this->definition = array($type, $url, $options);
         }
 
         $types = array(
@@ -140,10 +145,12 @@ class MetaTagAsset extends BaseAsset implements AssetInterface {
                     $result = array();
 
                     foreach ($url as $key => $val) {
-                        $result[] = array(array('property' => "og:$key", 'content' => $val), NULL, $options);
+                        $result[] = array(array('property' => "og:$key", 'content' => $val), null, (array) $options);
                     }
 
-                    return $result;
+                    $this->definition = $result;
+                    $this->multi = TRUE;
+                    return;
                 }
 
                 if (is_string($options)) {
@@ -174,28 +181,51 @@ class MetaTagAsset extends BaseAsset implements AssetInterface {
             $url = NULL;
         }
 
-        return array($type, $url, $options);
+        $this->definition = array($type, $url, $options);
     }
 
     /**
      * @return mixed
      */
-    public function getType() {
+    public function getType($idx = 0) {
+        if ($this->multi) {
+            return $this->definition[$idx][0];
+        }
+
         return $this->definition[0];
     }
 
     /**
      * @return mixed
      */
-    public function getUrl() {
+    public function getUrl($idx = 0) {
+        if ($this->multi) {
+            return $this->definition[$idx][1];
+        }
+
         return $this->definition[1];
     }
 
     /**
      * @return mixed
      */
-    public function getOptions() {
+    public function getOptions($idx = 0) {
+        if ($this->multi) {
+            return $this->definition[$idx][2];
+        }
+
         return $this->definition[2];
+    }
+
+    /**
+     * @return int
+     */
+    public function numberOfValues() {
+        if (!$this->multi) {
+            return 1;
+        }
+
+        return count($this->definition);
     }
 
     /**

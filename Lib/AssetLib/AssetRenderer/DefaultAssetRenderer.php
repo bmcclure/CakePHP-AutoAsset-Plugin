@@ -124,7 +124,19 @@ class DefaultAssetRenderer extends BaseAssetRenderer {
             throw new HelperMethodNotFoundException();
         }
 
-        return $helper->meta($asset->getType(), $asset->getUrl(), $asset->getOptions());
+        $numberOfValues = $asset->numberOfValues();
+
+        $result = "";
+
+        for ($i = 0; $i < $numberOfValues; $i++) {
+            if (!empty($result)) {
+                $result .= "\n";
+            }
+
+            $result .= $helper->meta($asset->getType($i), $asset->getUrl($i), (array) $asset->getOptions($i));
+        }
+
+        return $result;
     }
 }
 ?>
