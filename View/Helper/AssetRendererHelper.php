@@ -151,7 +151,8 @@ class AssetRendererHelper extends AppHelper {
 
         $helperObjects = array();
         foreach ($helpers as $name) {
-            $helperObjects[$name] = $this->loadHelper($name);
+            list($plugin, $helperName) = pluginSplit($name);
+            $helperObjects[$helperName] = $this->loadHelper($name);
         }
 
         $this->setRenderer('default', new DefaultAssetRenderer($helperObjects, $assetTypes));
@@ -166,7 +167,7 @@ class AssetRendererHelper extends AppHelper {
             $assetTypes = $this->settings['assetTypes'];
             $asyncTypes = $this->settings['asyncTypes'];
             foreach ($assetTypes as $idx => $type) {
-                if (array_key_exists($type, $asyncTypes)) {
+                if (array_search($type, $asyncTypes) !== false) {
                     $assetTypes[$type] = array('helper' => 'AsyncAsset');
                     unset($assetTypes[$idx]);
                 }
@@ -175,7 +176,8 @@ class AssetRendererHelper extends AppHelper {
 
         $helperObjects = array();
         foreach ($helpers as $name) {
-            $helperObjects[$name] = $this->loadHelper($name);
+            list($plugin, $helperName) = pluginSplit($name);
+            $helperObjects[$helperName] = $this->loadHelper($name);
         }
 
         $this->setRenderer('async', new DefaultAssetRenderer($helperObjects, $assetTypes));

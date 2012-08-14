@@ -37,6 +37,15 @@ class DefaultAssetRenderer extends BaseAssetRenderer {
     public function __construct($helpers = array(), $assetTypes = array()) {
         $this->helpers = $helpers;
 
+        $assetTypes = (array) $assetTypes;
+
+        foreach ($assetTypes as $idx => $assetType) {
+            if (is_int($idx)) {
+                $assetTypes[$assetType] = array();
+                unset($assetTypes[$idx]);
+            }
+        }
+
         $this->assetTypes = array_merge($this->assetTypes, $assetTypes);
 
         foreach ($this->assetTypes as $type => $options) {
