@@ -22,7 +22,7 @@ class AssetCollectorComponent extends Component {
      */
     private $blockDefaults = array(
         'renderer' => 'default',
-        'includeInAjaxResponse' => FALSE,
+        'ignoreTypes' => array('ajax'),
         'conditional' => array()
     );
 
@@ -37,7 +37,7 @@ class AssetCollectorComponent extends Component {
         'body',
         'bodyBottom' => array(
             'renderer' => 'async',
-            'includeInAjaxResponse' => TRUE,
+            'ignoreTypes' => array(),
         ),
         'ie' => array(
             'conditional' => array('lt IE 9'),
@@ -107,6 +107,9 @@ class AssetCollectorComponent extends Component {
 		parent::__construct($collection, $settings);
 	}
 
+    /**
+     * @param Controller $controller
+     */
     public function beforeRender(Controller $controller) {
         $controller->set($this->settings['assetsVar'], $this->getAssets());
     }
@@ -126,7 +129,10 @@ class AssetCollectorComponent extends Component {
             return TRUE;
         }
 
-        $this->assets[$name] = new AssetBlock();
+        $block = new AssetBlock();
+        $block->setIgnoreTypes($this->blocks[$name]['ignoreTypes']);
+
+        $this->assets[$name] = $block;
         return TRUE;
     }
 
@@ -189,16 +195,31 @@ class AssetCollectorComponent extends Component {
     public function getAssets() {
         $assets = array();
 
+        /**
+         * @var AssetBlock $block
+         */
         foreach ($this->assets as $name => $block) {
-            if (!$this->request->is("ajax") || $this->blocks[$name]['includeInAjaxResponse']) {
-                if ($name == $this->settings['controllersBlock']) {
-                    $this->_setupControllerAssets();
+            $ignore = FALSE;
+            foreach ($block->getIgnoreTypes() as $ignoreType) {
+                if ($this->request->is($ignoreType)) {
+                    $ignore = TRUE;
+                    break;
                 }
-                if ($name == $this->settings['jsHelpersBlock']) {
-                    $this->_setupJsHelpers();
-                }
-                $assets[$name] = $block;
             }
+
+            if ($ignore) {
+                continue;
+            }
+
+            if ($name == $this->settings['controllersBlock']) {
+                $this->_setupControllerAssets();
+            }
+
+            if ($name == $this->settings['jsHelpersBlock']) {
+                $this->_setupJsHelpers();
+            }
+
+            $assets[$name] = $block;
         }
 
 		return $assets;

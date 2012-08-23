@@ -39,6 +39,13 @@ class DefaultAssetRenderer extends BaseAssetRenderer {
 
         $assetTypes = (array) $assetTypes;
 
+        foreach ($this->assetTypes as $idx => $assetType) {
+            if (is_int($idx)) {
+                $this->assetTypes[$assetType] = array();
+                unset($this->assetTypes[$idx]);
+            }
+        }
+
         foreach ($assetTypes as $idx => $assetType) {
             if (is_int($idx)) {
                 $assetTypes[$assetType] = array();

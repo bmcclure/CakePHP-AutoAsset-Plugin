@@ -21,16 +21,28 @@ class AssetBlock {
      */
     protected $conditional;
 
+    protected $ignoreTypes;
+
     /**
      * @param string $renderer
      * @param array $conditional
      */
-    public function __construct($renderer = 'default', $conditional = array()) {
+    public function __construct($renderer = 'default', $conditional = array(), $ignoreTypes = array()) {
         $this->assets = new AssetCollection();
 
         $this->renderer = $renderer;
 
         $this->conditional = $conditional;
+
+        $this->ignoreTypes = $ignoreTypes;
+    }
+
+    public function getIgnoreTypes() {
+        return $this->ignoreTypes;
+    }
+
+    public function setIgnoreTypes(array $ignoreTypes = array()) {
+        $this->ignoreTypes = $ignoreTypes;
     }
 
     /**
