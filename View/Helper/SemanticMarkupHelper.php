@@ -39,9 +39,13 @@ class SemanticMarkupHelper extends AppHelper {
         return $output;
     }
 
-    public function chromeFrameBar() {
-        $output = '<!--[if lt IE 7]>';
-        $output .= '<p class=chromeframe>Your browser is <em>unsupported</em>. <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p>';
+    public function chromeFrameBar($message = null, $minSupportedIE = "8") {
+    	if (empty($message)) {
+    		$message = 'Your browser is <em>unsupported</em>. <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.';
+    	}
+    	
+        $output = "<!--[if lt IE $minSupportedIE]>";
+        $output .= "<p class=chromeframe>$message</p>";
         $output .= '<![endif]-->';
 
         return $output;

@@ -66,6 +66,10 @@ class AssetBlock {
         return $this->assets;
     }
 
+    public function setCollection(AssetCollection $collection) {
+        $this->assets = $collection;
+    }
+
     /**
      * @return array
      */

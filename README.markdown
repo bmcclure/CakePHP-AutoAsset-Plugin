@@ -2,69 +2,44 @@ AutoAsset Plugin
 ================
 A full-featured and extensible asset management plugin for CakePHP 2.x
 
-Important Information
-=====================
 
-AutoAsset just underwent a full rewrite and its documentation has not yet been updated. In 
-addition, some functionality is as yet untested. If you're not comfortable poking around the
-source code to figure out how to use the new version, then it would be best to wait until this
-documentation has been updated.
+What Is It?
+===========
 
-Some of the cool new features are:
-*  New OO library, 'AssetLib', included and used throughout AutoAsset.
-*  Assets are assigned to any number of AssetBlock objects.
-*  AssetBlocks contain custom settings for the block and are rendered in a layout or view
-*  AssetRenderer objects are responsible for outputting AssetBlocks (and individual assets)
-*  AssetGathererComponent is now AssetCollectorComponent and works in a much more OO-fashion
-*  AssetLoaderHelper is now AssetRendererHelper and allows for much more flexibility and extensibility
-*  AssetLib has a small library of exceptions thrown to help recover from exceptional circumstances
+*  It's a way to take most or all asset logic out of the layout or view.
+*  It's a way to automate certain asset inclusions in true CakePHP fashion
+*  It's a way to specify CSS files, JS files, JS global variables, and meta tags from the controller
+*  It automates loading CSS/JS files both normally (using the HtmlHelper) and asynchronously
+
 
 Why?
 ====
 
-Because.
+I found myself doing the same things over and over again for every one of my CakePHP projects. I was naming
+files the same, including them in the same places in the HTML, and using a lot of the same meta tags every time.
 
-Asynchronously loading JS and CSS files can be a very powerful alternative to concatenating,
-compressing, and caching your files into an unreadable mess. There are a lot of solutions which
-do the latter for CakePHP, but (almost) none that do the former. That's where AutoAsset comes in.
+Additionally, I found I often needed to insert a bit of logic to decide whether or not to output a specific asset, 
+or to conditionally include one of two possibilities depending on some variable.
 
-
-Background
-==========
-
-There are a lot of CSS and JavaScript helpers (and some plugins) available which are designed 
-to help users load specific controller/action assets automatically. Initially I implemented that
-functionality myself with a few lines of PHP.
-
-But then I started wanting to lazy-load assets using JavaScript, and suddenly almost all of the 
-Cake goodness went out the window... I was managing my CSS and JavaScript files from within a main 
-JavaScript file, with no ties what-so-ever to my CakePHP installation.
-
-So I found an amazingly simple script loader (https://github.com/ded/script.js) and decided to couple
-it with my existing code to have CakePHP output the required JavaScript to lazy-load the necessary files.
-This was *almost* what I wanted.
-
-And then, AutoAsset was born. I created a component which helps to automatically locate and organize assets 
-according to certain optional settings provided to it. I expanded $script (The Javascript loader) to also
-include $css, a CSS lazy-loader and a couple of helper functions ($url and $namespace), and a helper to tie
-it all into your views and layouts.
+Over time, I created a small library of helper functions which became more and more generic until it was eventually
+turned into a completely generic asset management plugin known as AutoAsset. It was originally for CakePHP 1.2 but
+the current versions support only CakePHP 2.x and recent versions of PHP.
 
 
 Requirements
 ============
 
-*   CakePHP 2.0 or greater (CakePHP 1.3 is supported in the outdated 1.x branch)
-*   PHP 5.3+ (Might work on 5.2)
+*  PHP 5.3+
+*  CakePHP 2.x (Most recent version developed on CakePHP 2.2.1)
 
 
 Installation
 ============
 
-
 Manual
 ------
 
-1.   Download the plugin: http://github.com/bmcclure/AutoAsset/zipball/master
+1.   Download the plugin: http://github.com/bmcclure/CakePHP-AutoAsset-Plugin/zipball/master
 2.   Unzip the downloaded file to your CakePHP app's 'Plugin' folder
 3.   Rename the unzipped folder to 'AutoAsset'
 
@@ -72,21 +47,26 @@ Manual
 Directly From GitHub
 --------------------
 
-Simply clone this repository to your CakePHP application under app\Plugin\AutoAsset. If your app is 
-version-controlled with Git already, then you can add AutoAsset as a submodule.
+1.   Within your project, create the directory app\Plugin\AutoAsset.
+2.   From within that directory, run the command:
+
+	git clone https://github.com/bmcclure/CakePHP-AutoAsset-Plugin.git
+
+Note: You can also add the AutoAsset repository as a submodule if your project is under Git version control.
 
 
-For CakePHP 2.0 users
+Activating the Plugin
 ---------------------
 
-No matter how you install the plugin, if you are using CakePHP 2.0 you need to make sure it is enabled in
-your app/Config/bootstrap.php file.
+No matter how you install the plugin, it only becomes active when you load it from your app's bootstrap.php file.
 
-Either use:
+Some examples of how to load AutoAsset:
+
+First, if loading plugins individually:
 
     CakePlugin::load('AutoAsset'); //Loads just this plugin
 
-Or:
+Or, to load all plugins automatically:
 
     CakePlugin::loadAll(); // Loads all plugins at once
 
@@ -94,52 +74,82 @@ Or:
 Usage
 =====
 
-
 Placing your media files
 ------------------------
 
-You can choose the directory to store your controller and action files in. You can use either controller 
-files, or action files, or both. To use the default directory which requires no additional configuration,
-place your files like this:
+You can store your media files anywhere within your webroot, but the easiest way to use the plugin is to follow 
+the same conventionsused by CakePHP and put JavaScript files under 'app/webroot/js/' and CSS files under 
+'app/webroot/css/'. This will require the least configuration, and that's usually preferred.
+
+AutoAsset is able to automatically include CSS and JS files corresponding to the controller and/or action in the
+current request. This feature is enabled by default, but nothing will happen unless you either tell AutoAsset
+where your controller-based assets are located, or put them in the location AutoAsset is expecting.
+
+By default, place your controller files in a structure such as this:
 
     /app/webroot/
-                 css/
-                     controllers/
-                 js/
-                     controllers/
+                 css/controllers/
+                                 pages.css
+                                 users.css
+                                 another_controller.css
+                 js/controllers/
+                                pages.js
+                                users.js
+                                another_controller.js
 
-Underneath controllers/ you can place asset files for any of your controllers. For a 'users' controller
-you could have files here:
+In the above example, both pages.css and pages.js will be loaded when the current request is within 
+'PagesController'.
 
-    /app/webroot/css/controllers/users.css
-    /app/webroot/js/controllers/users.js
+Likewise, you can create CSS and JS files for individual actions to further separate logic and keep your 
+files sparse and clean. Create a structure such as this:
 
-You can also utilize separate CSS and/or JS files for specific controller actions, like this:
+    /app/webroot/
+                 css/controllers/
+                                 pages/
+                                       display.css
+                                 users/
+                                       add.css
+                                       index.css
+                 js/controllers/
+                                users/
+                                      index.js
+                                      delete.js
 
-    /app/webroot/css/controllers/users/index.css
-    /app/webroot/js/controllers/users/index.js
+In the above example, when PagesController is displaying a page, pages.css will be loaded. When on the main
+Users index, users/index.css and users/index.js will be loaded.
 
-You don't need to create a controller media file to be able to use an action media file. If you use both,
-the controller file will start loading before the action file, but since they are loaded asynchronously
-they are not guaranteed to finish loading in the same order. Keep reading to learn about how to properly
-define dependencies for your JS and CSS files.
+You can combine both controller and action files. In this case, with both of the above examples, when on 
+Users index the following files will be loaded if they exist:
 
-Finally, you can place any other JS files anywhere underneath your webroot/js directory, and any other CSS
-files underneath your webroot/css directory, and have AutoAsset place them in your layout or load them 
-asynchronously.
+    css/controllers/users.css
+    css/controllers/users/index.css
+    js/controllers/users.js
+    js/controllers/users/index.js
 
-You might place your JS libraries in webroot/js/libs, for example. AutoAsset will then be able to reference
-library paths such as 'libs/jquery-1.6.min'.
+You don't need to create a controller file to be able to use an action file. If you do use both,
+the controller file will start loading before the action file, but by default they are loaded 
+asynchronously and thus are not guaranteed to finish loading in the same order. Keep reading to 
+learn the recommended way to define dependencies for your JS and CSS files when using AutoAsset.
+
+For the rest of your JS and CSS assets, place them anywhere in a logical structure underneath the respective
+app/webroot/js/ and app/webroot/css/ directories. In this way you can load them with AutoAsset, or load them
+with some other tool, or Cake's core HtmlHelper, without moving them.
+
+Some simple file placement recommendations:
+
+*  Place JS libraries under js/libs/; If it's a multi-file library, create a directory for it under js/libs/
+*  Place Jquery plugins under js/libs/jquery/ or js/libs/jquery/plugins/ to keep them better secluded
+*  Place CSS files under css/libs/ with the same guidelines as for JS files
 
 
 Loading the component
 ---------------------
 
-Next, load the AssetGatherer component in your AppController. Your $components array might look like this:
+Next, load the AssetCollector component in your AppController. Your $components array might look like this:
 
-    public $components = array('AutoAsset.AssetGatherer');
+    public $components = array('AutoAsset.AssetCollector');
 
-Or maybe you want to provide a couple of options to AssetGatherer to make it even more useful:
+Or maybe you want to provide a couple of options to AssetCollector:
 
     public $components = array(
         'AutoAsset.AssetGatherer' => array(
@@ -150,49 +160,142 @@ Or maybe you want to provide a couple of options to AssetGatherer to make it eve
 
 The full set of options you can provide to the component (and their defaults) are:
 
-*   'asyncJs' (Default: 'bootstrap')
-    
-    Indicates which JS files should be loaded asynchronously. This is by default a string ('bootstrap')
-    used to load the JS file from your webroot /js/bootstrap.js where you can lazy-load all of your other
-    JavaScript and CSS. You can also provide your own string or array of files to load.
+*   'assets'
 
-*   'asyncCss' (Default: null)
+    A default set of assets to include for all controllers and actions. For large or complex groups of assets,
+    this can also be set within beforeFilter, where all assets can be added together or individually.
 
-    Indicates which CSS files should be loaded asynchronously. By default this is null so that you can simply
-    include the CSS files you'd like within bootstrap.js.
-    
-*   'asyncLess' (Default: null)
+    The format for specifying them here is:
 
-    Works the same as asyncCss, only it loads a .less file using LESS instead.
+    'assets' => array(
+        'headTop' => array(
+            'js' => 'bootstrap',
+            'css' => array(
+                'style',
+                'someFile' => array('option' => 'value'),
+            ),
+        ),
+    ),
 
-*   'requiredJs' (Default: null)
+    The first level of the array is the name of an asset block. If it isn't already defined it will be created with
+    default settings.
 
-    Indicates which JS files should be loaded first, in the head section of your layout. This is usually used
-    for prerequisites that you know will always have to be loaded, and that don't overly slow down the loading
-    of your pages. Frequently you would put Modernizr and Selectivizr here, if you use them.
+    Underneath the block name is a keyed array of asset types to assets. In this case we're specifying 'js' and 'css'
+    assets. The array value can either be a string for a single asset, or an array for multiple assets.
 
-*   'requiredCss' (Default: null)
+    If specifying multiple assets for a particular asset type, you can optionally specify settings for each asset as
+    another nested keyed array as demonstrated with 'someFile' above.
 
-    Indicates which CSS files should be loaded first, in the head section of your layout. This is often used
-    to load your "main" CSS file which controls the appearance of your site. Any CSS which doesn't need to be loaded
-    already when the page is first displayed should instead go in 'asyncCss' to help speed up your site.
-    
-*   'requiredLess' (Default: null)
+    You can also specify other asset types to include here, such as 'jsGlobal' or 'meta'.
 
-    Works the same as the requiredCss option above, only for .less files.
-    
-*   'globals' (Default: null)
+*   'blocks'
 
-    Can contain an associative array of key and value pairs that will be output as Javascript variables available
-    to all other JavaScript files. Be careful not to overwrite any important variables here. You can choose where
-    in your script these are output using the AssetLoaderHelper.
-    
-*   'meta' (Default: null)
+    An associative array of block names and options in the form:
 
-    Contains an array of arrays containing three values (the same values that HtmlHelper->meta() accepts. The best
-    way to use this setting is to utilize AssetGatherer's meta() function, since it offers a lot of helpful
-    functionality before adding the parameters to this setting.
-    
+    'blocks' => array(
+        'name' => array(
+            'option' => 'value',
+            'option' => 'value',
+        ),
+    ),
+
+    Any option not provided will be populated from the 'blockDefaults' array (see below).
+
+    The default blocks that will be included if not overridden are: 'headTop', 'head', 'headBottom', 
+    'bodyTop', 'body', and 'bodyBottom'. The only non-default option used by the blocks is within 
+    'bodyBottom' which uses the 'async' renderer instead of 'default'.
+
+*   'blockDefaults'
+
+    An associative array of default options for each asset block if not overridden. If not specified
+    the defaults will be:
+
+    'renderer' => 'default',
+    'ignoreTypes' => array('ajax'),
+    'conditional' => array(),
+
+*   'jsHelpers'
+
+    An associative array of names and paths for each of the JavaScript helpers that AutoAsset should load.
+    By default these are:
+
+    'script' => '/auto_asset/js/script.min',
+    'css' => '/auto_asset/js/css',
+    'namespace' => '/auto_asset/js/namespace',
+    'url' => '/auto_asset/js/url',
+
+*   'controllerAssets'
+
+    An associative array defining the types of assets to auto-load based on controller and/or action.
+    By default these include:
+
+    'css' => TRUE,
+    'js' => TRUE,
+
+*   'jsHelpersBlock'
+
+    The name of the asset block that AutoAsset's JS helpers should be output within. By default 
+    this is 'headTop'.
+
+*   'controllersBlock'
+
+    The name of the asset block in which to output the auto-included controller and action files. By
+    default this is 'head'.
+
+*   'controllersPath'
+
+    The path under each asset type's main directory in which controller and action files can be found.
+    By default this is simply 'controllers' which corresponds to /js/controllers/ and /css/controllers/.
+
+*   'assetsVar'
+
+    The name of the variable that will be included in the view containing all assets. The main reason
+    this should ever be changed is if you are using the variable name $assets for something else in your
+    layout or views.
+
+    If you change this here, make sure to also set the same option for AssetRendererHelper so it knows
+    where to look.
+
+
+Using the component
+---------------------
+
+You can do more with the AssetCollectorComponent than just configure it when including. In fact, it's often
+easier to specify your assets from beforeFilter() in AppController rather than stuffing them all into the
+component's configuration array.
+
+The available methods are:
+
+*   jsGlobal($name, $value = '', $block = 'headTop')
+
+    Output a global JavaScript variable that you can access from any other scripts on the site. Be careful
+    not to use a name that will override something else, or be overridden by something else, or unexpected
+    results can occur.
+
+    You can provide multiple globals with a single function call in one of two ways:
+
+    jsGlobal(array('key1', 'key2', 'key3'), array('value1', 'value2', 'value3'));
+
+    Or:
+
+    jsGlobal(array('key1' => 'value1', 'key2' => 'value2', 'key3' => 'value3')));
+
+*   js($path, $block = 'bodyBottom')
+
+    Output a JavaScript file indicated by $path (relative to the asset type dir, or a full URL) in the indicated asset block.
+
+    $path can either be a string for a single file, or an array of strings to specify multiple files to load.
+
+*   css($path, $rel = 'stylesheet', $media = 'screen', $block = 'head')
+
+    Output a CSS file indicated by $path as type $rel for media type $media within asset block $block.
+
+    $path can be a string for a single file, or an array of strings for specifying multiple files in one call.
+
+*   meta($type, $url = NULL, $options = array(), $block = 'head')
+
+    Output any meta tag within the head.
+
     The suggested way to use it is to call AssetGatherer->meta() the exact same way you would with HtmlHelper, but
     do it in your controller's beforeFilter (or in the AppController).
     
@@ -290,115 +393,102 @@ The full set of options you can provide to the component (and their defaults) ar
         'action' should be the URL for the task. 'icon' should be the URL of an icon to display next to the task
         name.
 
-*   'earlyMeta' (Default: null)
+*   block($name, $settings = array())
 
-    This is exactly the same as 'meta', but it meant to be called at the top of <head> for the tags which need to be
-    in the first 1024 bytes. To add tags to this field, use the same calls to meta() as described in the 'meta' 
-    section abobe, but either (1) add 'early' => true to the third parameter's array, or supply true for the fourth
-    parameter. The effect will be the same as normal, except it will end up in 'earlyMeta' instead of 'meta'
+    Defines a new (or replacement) asset block from within a controller.
 
-*   'controllersPath' (Default: 'controllers')
+    You only need to call this method if (a) You didn't define the block within your $components array and (b) You
+    want to use custom settings other than the defaults.
 
-    Indicates the path relative to both your /js and /css folders where your controller/action JS and CSS files
-    reside. This can be null to turn off controller/action auto-loading functionality. Alternatively, you can 
-    leave it as-is and simply not create or utilize the /js/controllers and /css/controllers path, and
-    controller/action CSS and JS file inclusion will also be disabled.
+    If you don't need any custom settings, then this exact same behavior will happen automatically the first time you
+    try to put an asset in the block, so you don't need to call this function at all.
 
-*   'scriptJs' (Default: '/auto_asset/js/script.min')
+    Often, you may want to create a block using the 'async' renderer (or some other custom renderer), in which case calling
+    this method to define the custom renderer is appropriate.
 
-    Indicates the path to the script.js loader for Javascript. You can point to your own version, or set to 
-    null to not include script.js (which will essentially disable all $script() calls and make most of this 
-    plugin useless.
+    Example:
 
-*   'cssJs' (Default: '/auto_asset/js/css')
+        $this->AssetCollector->block('app', array('renderer' => 'async'));
 
-    Indicates the path to the css.js loader for CSS files. You can point to your own version, or set to
-    null to not include css.js (which will disable all lazy-loading of CSS files).
+    The above code would specify a new block named 'app' that will render assets asynchronously where appropriate.
 
-*   'namespaceJs' (Default: '/auto_asset/js/namespace')
+*   resetControllersPath($path)
 
-    Indicates the path to the namespace.js helper function for Javascript. You can point to your own version, or
-    set to null to not include namespace.js (which will disable the $namespace() function in your JS files).
-
-*   'urlJs' (Default: '/auto_asset/js/url')
-
-    Indicates the path to the url.js helper function for Javascript. You can point to your own version, or set
-    to null to not include url.js (which will disable the $url() function in your JS files).
-    
-*   'lessLib' (Default: '/auto_asset/js/less-1.2.1.min')
-
-    Indicated the path to the LESS JavaScript library, which will be used for processing of .less files. If you do
-    not plan to use .less files, you can set lessLib and lessJs to null so that the files are not loaded.
-    
-*   'lessJs' (Default: '/auto_asset/js/less')
-
-    Indicates the path to the less.js helper function for the LESS library. It is used when asynchronously loading
-    .less files.
-
-Finally, in your AppController's beforeFilter() or beforeRender() callback, add the following line:
-
-    $this->set('assets', $this->AssetGatherer->getAssets());
-
-This will provide the $assets array to your views.
+    If you want to change the path to controller/action files after loading the component, use this method 
+    to ensure all internals are updated. Just pass a relative path underneath each asset type's directory where
+    the files can be found. To emulate the default functionality you'd call resetControllersPath('controllers').
 
 
 Loading the helper
 ------------------
 
-Also in your AppController, add the AssetLoader helper to your $helpers array. It might look like this:
+Also in your AppController, add the AssetRenderer helper to your $helpers array. It might look like this:
 
-    public $helpers = array('AutoAsset.AssetLoader');
+    public $helpers = array('AutoAsset.AssetRenderer');
 
-The AssetLoader helper doesn't take any settings.
+You can also provide a few settings to AssetLoader to customize its behavior:
+
+*   'assetsVar'
+
+    Defaults to 'assets'. It should match what you've set for the 'assetsVar' setting in the AssetCollector component. If you
+    haven't customized it there, then don't customize it here.
+
+*   'helpers'
+
+    The names of helpers that should be made available to AssetRenderer objects. The defaults:
+    
+        array('Html', 'AutoAsset.AsyncAsset')
+
+*   'assetTypes'
+
+    The available types of assets to output. The defaults:
+
+        array('js', 'css', 'jsGlobal', 'metaTag')
+
+*   'asyncTypes'
+
+    The types of assets that can be handled asynchronously. The defaults:
+
+        array('js', 'css')
 
 
 Configuring your layout
 -----------------------
 
-If you are using AssetGatherer's 'requiredJs' or 'requiredCss' options, add the following to your layout 
-somewhere within the head tag (and before you load other JS and CSS files):
+Within your layout (or views), you should output each block where appropriate. The default blocks included with
+AutoAsset are 'headTop', 'head', 'headBottom', 'bodyTop', 'body', and 'bodyBottom'. If you make use of any of
+these blocks, make sure you output them in your layout.
 
-    echo $this->AssetLoader->required();
+Use the following method to render a block:
 
-You can also pass in a string indicating which type of required file to load ('css', 'less', or 'js') or an 
-array of strings. If you wish to use a custom helper when the function calls the script() and css() function,
-you can pass one in the second parameter. AutoAsset already uses a custom helper to load .less files, so you
-don't need to worry about that. You can load certain types of assets, and then call required() later on to 
-output only the types which have out already been output.
+    $this->AssetRenderer->render('headTop');
 
-Additionally, use the following function near the top of your <head> to output all meta tags defined in your 
-controllers:
+Each block has its own settings internally for how it should be rendered, so you don't need to worry about that here. By default,
+JavaScript files added to the 'head' block are rendered normally, while JavaScript files added to 'bodyBottom' will be rendered 
+asynchronously. Either way, you simply call renderBlock() with the name of the block to render.
 
-    echo $this->AssetLoader->meta(true);
+You can also explicitely render an AssetBlock, AssetCollection, or an individual Asset. Examples:
+
+    // @var AssetBlock $block
+    $this->AssetRenderer->renderBlock($block);
     
-Then use this function a bit further down to output the rest of your meta tags (still within <head>):
-
-    echo $this->AssetLoader->meta();
+    // @var AssetCollection $collection
+    $this->AssetRenderer->renderCollection($collection);
     
-You can also output a valid <base> tag for your site's base URL with the following function:
+    // @var Asset $asset
+    $this->AssetRenderer->renderAsset($asset);
 
-    echo $this->AssetLoader->base();
-    
-You can optionally supply a URL as the first parameter, and if you want it to be self-closing (not required
-in HTML5) then pass false for the second parameter.
 
-And finally near the bottom, usually right before the closing body tag, add the following:
+Using custom renderers
+----------------------
 
-    if (isset($assets)) {
-        echo $this->AssetLoader->globals();
-        echo $this->AssetLoader->load();
-    }
-    
-You can call the functions anywhere in your layout that you would like, but it is recommended to follow the
-above pattern for maximum performance.
+You can replace or define custom renderers that blocks should use from within your layout if necessary.
 
-The main exception is if any of your 'requiredJs' files rely on your defined 'globals'. In that case, call the
-globals() function before the required() function.
+An example:
 
-Also note that if you do not call required() before calling load(), load() will also load all of the required files
-for you. Thus, if you'd prefer to load everything before the closing body tag, you can simply omit the required()
-function call from the head.
+    $this->AssetRenderer->setRenderer('custom', new CustomAssetRenderer());
 
+Now, any blocks defined with the 'custom' asset renderer will properly use your defined renderer.
 
 The end result
 --------------
@@ -513,6 +603,56 @@ pass ALL urls through $url() and you'll always get a valid, absolute URL returne
 
 The magic is thanks to the "base" tag you added earlier which points $url to the root of your CakePHP installation.
 
+
+Outputting semantic markup
+==========================
+
+Many common patterns are repeated throughout layouts. While it may eventually be extracted to its own plugin,
+AutoAsset currently also includes the SemanticMarkupHelper that has a few methods to simplify using current standards.
+
+Load it in your $helpers array, such as:
+
+    public $helpers = array('AutoAsset.AssetRenderer', AutoAsset.SemanticMarkup');
+
+Then, you can use the following methods to output some useful tags automatically:
+
+*   conditionalHtmlTag($class = "no-js")
+
+    This will output an opening HTML tag using a common pattern with IE conditional comments. With the default
+    parameter, the following would be output:
+
+        <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+        <!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+        <!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+        <!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+
+*   endConditionalHtmlTag()
+
+    Generally, you should simply put a closing HTML tag in your layout manually. Sometimes, this will cause errors
+    to be reported in your IDE since the conditionalHtmlTag() method isn't seen as an opening tag. If there is no 
+    other way around it, you can call this method to output a simple closing HTML tag.
+
+*   base($url = NULL, $html5 = TRUE)
+
+    Outputs a proper base tag. Call the method in the head of your layout. Without any parameters, it will use the base path
+    of your CakePHP application.
+
+    The $html5 parameter defines how the tag should look. If true, the tag will be HTML5-compliant and will not be self-closing.
+    If false, the tag will be XHTML-compliant and will self-close.
+
+*   chromeFrameBar($message = null, $minSupportedIE = "8")
+
+    Outputs a message about upgrading the browser or using Chrome Frame. Uses an IE conditional comment to only appear if
+    less than the specified IE version.
+
+    By default, the message appears for IE7 and earlier (since these browsers are no longer supported by Microsoft as of 
+    2012).
+
+    With the default parameters, the following will be output:
+
+        <!--[if lt IE 8]>
+            <p class=chromeframe>Your browser is <em>unsupported</em>. <a href="http://browsehappy.com/">Upgrade to a different browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to experience this site.</p>
+        <![endif]-->
 
 Final Notes
 ===========

@@ -60,14 +60,13 @@ class AssetRendererHelper extends AppHelper {
         $this->setDefaultRenderer($this->settings['helpers'], $this->settings['assetTypes']);
         $this->setAsyncRenderer();
     }
-
-    /**
-     * @param null $name
-     * @return string
-     * @throws AssetRendererNotFoundException
-     */
-    public function renderBlock($name = NULL) {
-        if ($name == NULL) {
+    
+    public function render($name = null) {
+    	if (is_a($name, 'AssetBlock')) {
+    		return $this->renderBlock($name);
+    	}
+    	
+    	if (empty($name)) {
             $name = array_keys($this->assets);
         }
 
@@ -86,21 +85,33 @@ class AssetRendererHelper extends AppHelper {
                 continue;
             }
 
-            /**
-             * @var AssetRenderer $renderer
-             */
-            $renderer = $this->renderers[$block->getRenderer()];
-
-            if (!is_a($renderer, 'AssetRenderer')) {
-                throw new AssetRendererNotFoundException(array('renderer' => $block->getRenderer()));
-            }
-
-            $output .= $renderer->renderBlock($block);
+            $output .= $this->renderBlock($block);
 
             $this->blocksRendered[] = $blockName;
         }
-
+        
         return $output;
+    }
+
+    /**
+     * @param null $name
+     * @return string
+     * @throws AssetRendererNotFoundException
+     */
+    public function renderBlock(AssetBlock $block, AssetRenderer $renderer = null) {
+    	if (is_null($renderer)) {
+    		$renderer = $block->getRenderer();
+    	}
+    	
+    	if (is_string($renderer)) {
+    		$renderer = $this->renderers[$renderer];
+    	}
+    	
+    	if (!is_a($renderer, 'AssetRenderer')) {
+            throw new AssetRendererNotFoundException(array('renderer' => $block->getRenderer()));
+        }
+    	
+    	return $renderer->renderBlock($block);
     }
 
     /**
@@ -193,20 +204,5 @@ class AssetRendererHelper extends AppHelper {
 
         return $helper;
     }
-
-	/**
-	 * Returns the HTML output to lazy-load the configured Javascript and Css
-	 *
-	 * Also includes the required CSS and JS if it has not already been output with the
-	 *  required($assets) function, since they need to appear before the async assets.
-	 */
-	public function load() {
-		$output = "\$css.path = '/css/';\n";
-		$output .= "\$script.path = '/js/';\n";
-
-		$output = $this->Html->scriptBlock($output, array('inline' => TRUE));
-
-		return $output;
-	}
 }
 ?>

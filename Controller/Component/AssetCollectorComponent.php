@@ -114,18 +114,38 @@ class AssetCollectorComponent extends Component {
         $controller->set($this->settings['assetsVar'], $this->getAssets());
     }
 
+    public function block($name, $settings = array()) {
+        $this->blocks[$name] = array_merge($this->blockDefaults, $settings);
+
+        $this->replaceAssetBlock($name, $this->createBlock($this->blocks[$name]));
+    }
+
+    public function replaceAssetBlock($name, AssetBlock $block) {
+        if (isset($this->assets[$name])) {
+            $assets = $this->assets[$name]->getCollection();
+
+            $block->setCollection($assets);
+        }
+
+        $this->assets[$name] = $block;
+    }
+
+    protected function createBlock($settings) {
+        return new AssetBlock($settings['renderer'], $settings['conditional']);
+    }
+
 
     /**
      * @param $name
      * @return bool
      */
-    public function prepareBlock($name) {
+    protected function prepareBlock($name) {
         if (!empty($this->assets[$name]) && is_a($this->assets[$name], 'AssetBlock')) {
             return TRUE;
         }
 
         if (!empty($this->blocks[$name])) {
-            $this->assets[$name] = new AssetBlock($this->blocks[$name]['renderer'], $this->blocks[$name]['conditional']);
+            $this->assets[$name] = $this->createBlock($this->blocks[$name]);
             return TRUE;
         }
 
@@ -150,10 +170,23 @@ class AssetCollectorComponent extends Component {
      * @param null $value
      * @param string $block
      */
-    public function jsGlobal($name, $value = NULL, $block = 'head') {
+    public function jsGlobal($name, $value = NULL, $block = 'headTop') {
         $this->prepareBlock($block);
-
-        $this->assets[$block]->add(new JsGlobalAsset($name, $value));
+        
+        if (is_array($name) && is_array($value)) {
+        	$i = 0;
+        	foreach ($name as $key) {
+        		$this->assets[$block]->add(new JsGlobalAsset($key, $value[$i]));
+        		
+        		$i++;
+        	}
+        } elseif (is_array($name)) {
+        	foreach ($name as $key => $val) {
+        		$this->assets[$block]->add(new JsGlobalAsset($key, $val));
+        	}
+        } else {
+        	$this->assets[$block]->add(new JsGlobalAsset($name, $value));
+        }
 	}
 
     /**
@@ -162,8 +195,10 @@ class AssetCollectorComponent extends Component {
      */
     public function js($path, $block = 'bodyBottom') {
         $this->prepareBlock($block);
-
-        $this->assets[$block]->add(new JsAsset($path));
+        
+        foreach ((array) $path as $file) {
+        	$this->assets[$block]->add(new JsAsset($file));
+        }
     }
 
     /**
@@ -174,7 +209,9 @@ class AssetCollectorComponent extends Component {
     public function css($path, $rel = 'stylesheet', $media = 'screen', $block = 'head') {
         $this->prepareBlock($block);
 
-        $this->assets[$block]->add(new CssAsset($path, $rel, $media));
+		foreach ((array) $path as $file) {
+			$this->assets[$block]->add(new CssAsset($file, $rel, $media));
+		}
     }
 
     /**
@@ -368,6 +405,15 @@ class AssetCollectorComponent extends Component {
 
         foreach (array_reverse($this->jsHelpers) as $path) {
             $collection->insert(new JsAsset($path));
+        }
+        
+        $globals = array(
+        	'$css.path' => '/css/', 
+        	'$script.path' => '/js/'
+    	);
+        
+        foreach ($globals as $name => $val) {
+        	$collection->insert(new JsGlobalAsset($name, $val));
         }
     }
 }
