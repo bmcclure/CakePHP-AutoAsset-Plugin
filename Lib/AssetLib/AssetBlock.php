@@ -1,6 +1,9 @@
 <?php
-App::uses('AssetCollection', 'AutoAsset.Lib/AssetLib');
-App::uses('AssetInterface', 'AutoAsset.Lib/AssetLib/Asset');
+require_once 'Asset/AssetInterface.php';
+require_once 'AssetCollection.php';
+
+//App::uses('AssetCollection', 'AutoAsset.Lib/AssetLib');
+//App::uses('AssetInterface', 'AutoAsset.Lib/AssetLib/Asset');
 
 /**
  * Represents a block of assets to be output in a region of a site

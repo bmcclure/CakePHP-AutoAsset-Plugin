@@ -1,5 +1,6 @@
 <?php
-App::uses('BaseAsset', 'AutoAsset.Lib/AssetLib/Asset');
+require_once 'AssetInterface.php';
+require_once 'BaseAsset.php';
 
 /**
  * Represents any asset that is a file

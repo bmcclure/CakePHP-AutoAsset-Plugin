@@ -1,5 +1,7 @@
 <?php
-App::uses('ValueAsset', 'AutoAsset.Lib/AssetLib/Asset');
+require_once 'AssetInterface.php';
+require_once 'BaseAsset.php';
+require_once 'ValueAsset.php';
 
 /**
  * Represents a global Javascript variable

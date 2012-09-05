@@ -1,7 +1,10 @@
 <?php
-App::uses('AssetBlock', 'AutoAsset.Lib/AssetLib');
-App::uses('AssetCollection', 'AutoAsset.Lib/AssetLib');
-App::uses('AssetInterface', 'AutoAsset.Lib/AssetLib/Asset');
+require_once dirname(dirname(__FILE__)).DS.'AssetBlock.php';
+require_once dirname(dirname(__FILE__)).DS.'AssetCollection.php';
+require_once dirname(dirname(__FILE__)).DS.'Asset/AssetInterface.php';
+//App::uses('AssetBlock', 'AutoAsset.Lib/AssetLib');
+//App::uses('AssetCollection', 'AutoAsset.Lib/AssetLib');
+//App::uses('AssetInterface', 'AutoAsset.Lib/AssetLib/Asset');
 
 /**
  * Renders assets (or entire asset collections or asset blocks) for display

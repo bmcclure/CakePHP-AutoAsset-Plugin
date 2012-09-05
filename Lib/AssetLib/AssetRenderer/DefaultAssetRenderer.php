@@ -1,6 +1,9 @@
 <?php
-App::uses('BaseAssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
-App::uses('HelperMethodNotFoundException', 'AutoAsset.Lib/AssetLib/Error/Exception');
+require_once 'BaseAssetRenderer.php';
+require_once dirname(dirname(__FILE__)).DS.'Error/Exception/HelperMethodNotFoundException.php';
+
+//App::uses('BaseAssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
+//App::uses('HelperMethodNotFoundException', 'AutoAsset.Lib/AssetLib/Error/Exception');
 
 /**
  * The default AssetRenderer which uses provided CakePHP helpers to render assets

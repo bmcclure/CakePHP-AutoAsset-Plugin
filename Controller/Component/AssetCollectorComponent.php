@@ -1,11 +1,17 @@
 <?php
-App::uses('AssetBlock', 'AutoAsset.Lib/AssetLib');
-App::uses('AssetCollection', 'AutoAsset.Lib/AssetLib');
 App::uses('AssetInterface', 'AutoAsset.Lib/AssetLib/Asset');
+App::uses('BaseAsset', 'AutoAsset.Lib/AssetLib/Asset');
+App::uses('FileAsset', 'AutoAsset.Lib/AssetLib/Asset');
+App::uses('ValueAsset', 'AutoAsset.Lib/AssetLib/Asset');
 App::uses('CssAsset', 'AutoAsset.Lib/AssetLib/Asset');
 App::uses('JsAsset', 'AutoAsset.Lib/AssetLib/Asset');
 App::uses('JsGlobalAsset', 'AutoAsset.Lib/AssetLib/Asset');
 App::uses('MetaTagAsset', 'AutoAsset.Lib/AssetLib/Asset');
+App::uses('AssetCollection', 'AutoAsset.Lib/AssetLib');
+App::uses('AssetBlock', 'AutoAsset.Lib/AssetLib');
+App::uses('AssetBlockNotFoundException', 'AutoAsset.AssetLib/Error/Exception');
+App::uses('AssetTypeUnsupportedException', 'AutoAsset.AssetLib/Error/Exception');
+App::uses('MissingAssetClassException', 'AutoAsset.AssetLib/Error/Exception');
 
 /**
  * AssetGatherer Component

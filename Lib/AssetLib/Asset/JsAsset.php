@@ -1,10 +1,13 @@
 <?php
-App::uses('FileAsset', 'AutoAsset.Lib/AssetLib/Asset');
+require_once 'AssetInterface.php';
+require_once 'BaseAsset.php';
+require_once 'FileAsset.php';
+
 
 /**
  * Represents a Javascript file asset
  */
-class JsAsset extends FileAsset {
+class JsAsset extends FileAsset implements AssetInterface {
     /**
      * @param $path
      * @param string $basePath

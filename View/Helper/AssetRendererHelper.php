@@ -1,7 +1,13 @@
 <?php
 App::uses('AppHelper', 'View/Helper');
-App::uses('DefaultAssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
-App::uses('AssetRendererNotFoundException', 'AutoAsset.Lib/AssetLib/Error/Exception');
+App::uses('AssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
+App::uses('BaseAssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
+App::uses('DefaultAssetRenderer', 'AutoAsset.AssetLib/AssetRenderer');
+App::uses('AssetRendererNotFoundException', 'AutoAsset.AssetLib/Error/Exception');
+App::uses('AssetBlockNotFoundException', 'AutoAsset.AssetLib/Error/Exception');
+App::uses('AssetTypeUnsupportedException', 'AutoAsset.AssetLib/Error/Exception');
+App::uses('HelperMethodNotFoundException', 'AutoAsset.AssetLib/Error/Exception');
+App::uses('MissingAssetClassException', 'AutoAsset.AssetLib/Error/Exception');
 
 /**
  * AssetLoader Helper

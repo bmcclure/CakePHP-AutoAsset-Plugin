@@ -1,5 +1,5 @@
 <?php
-App::uses('AssetInterface', 'AutoAsset.Lib/AssetLib/Asset');
+require_once 'Asset/AssetInterface.php';
 
 /**
  * Represents any basic collection of AssetInterface objects

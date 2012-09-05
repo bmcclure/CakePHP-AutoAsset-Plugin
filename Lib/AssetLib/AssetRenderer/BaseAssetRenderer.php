@@ -1,6 +1,8 @@
 <?php
-App::uses('AssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
-App::uses('AssetTypeUnsupportedException', 'AutoAsset.Lib/AssetLib/Error/Exception');
+require_once 'AssetRenderer.php';
+require_once dirname(dirname(__FILE__)).DS.'Error/Exception/AssetTypeUnsupportedException.php';
+//App::uses('AssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
+//App::uses('AssetTypeUnsupportedException', 'AutoAsset.Lib/AssetLib/Error/Exception');
 
 /**
  * The base AssetRenderer that others inherit from

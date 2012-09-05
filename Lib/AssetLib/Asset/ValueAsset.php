@@ -1,5 +1,7 @@
 <?php
-App::uses('BaseAsset', 'AutoAsset.Lib/AssetLib/Asset');
+require_once 'AssetInterface.php';
+require_once 'BaseAsset.php';
+
 
 /**
  * Represents an asset tha is a key/value pair

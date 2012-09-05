@@ -1,5 +1,8 @@
 <?php
-App::uses('FileAsset', 'AutoAsset.Lib/AssetLib/Asset');
+require_once 'AssetInterface.php';
+require_once 'BaseAsset.php';
+require_once 'FileAsset.php';
+
 
 /**
  * Represents a CSS file to be used

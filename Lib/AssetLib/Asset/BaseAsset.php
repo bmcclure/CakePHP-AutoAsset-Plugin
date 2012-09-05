@@ -1,5 +1,5 @@
 <?php
-App::uses('AssetInterface', 'AutoAsset.Lib/AssetLib/Asset');
+require_once 'AssetInterface.php';
 
 /**
  * The basic abstract Asset class that most assets extend.
