@@ -17,6 +17,6 @@ abstract class BaseAsset implements AssetInterface {
      * @abstract
      * @return bool
      */
-    abstract public function isValid();
+    //abstract public function isValid();
 }
 ?>
