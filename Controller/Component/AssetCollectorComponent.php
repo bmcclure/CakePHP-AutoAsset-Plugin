@@ -394,8 +394,24 @@ class AssetCollectorComponent extends Component {
         $controller = Inflector::underscore($this->request->params['controller']);
         $action = Inflector::underscore($this->request->params['action']);
 
-        $this->$type($this->settings['controllersPath'].$controller);
-        $this->$type($this->settings['controllersPath'].$controller.DS.$action);
+        switch ($type) {
+            case 'css':
+                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).$this->settings['controllersPath'].$controller.'.css')) {
+                    $this->$type($this->settings['controllersPath'].$controller);
+                }
+                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).$this->settings['controllersPath'].$controller.DS.$action.'.css')) {
+                    $this->$type($this->settings['controllersPath'].$controller.DS.$action);
+                }
+                break;
+            case 'js':
+                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).$this->settings['controllersPath'].$controller.'.js')) {
+                    $this->$type($this->settings['controllersPath'].$controller.'.js');
+                }
+                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).$this->settings['controllersPath'].$controller.DS.$action.'.js')) {
+                    $this->$type($this->settings['controllersPath'].$controller.DS.$action.'.js');
+                }
+                break;
+        }
     }
 
     /**
