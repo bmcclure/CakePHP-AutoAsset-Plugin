@@ -167,7 +167,7 @@ class AssetCollectorComponent extends Component {
 	 * Changes the path to controller/action files after the component has already been initialized
 	 */
 	public function setThemeName($name) {
-		$this->settings['theme'] = 'theme/'.$name.'/';
+		$this->settings['theme'] = 'theme'.DS.$name.DS;
 
 		$this->_setupControllersPaths();
 	}
