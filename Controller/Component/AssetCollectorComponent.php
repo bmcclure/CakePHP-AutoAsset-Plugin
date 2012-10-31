@@ -75,6 +75,7 @@ class AssetCollectorComponent extends Component {
     protected $defaults = array(
         'jsHelpersBlock' => 'headTop',
         'controllersPath' => 'controllers',
+        'theme' => '',
         'controllersBlock' => 'head',
         'assetsVar' => 'assets',
     );
@@ -165,8 +166,8 @@ class AssetCollectorComponent extends Component {
 	/**
 	 * Changes the path to controller/action files after the component has already been initialized
 	 */
-	public function resetControllersPath($path) {
-		$this->settings['controllersPath'] = $path;
+	public function setThemeName($name) {
+		$this->settings['theme'] = 'theme/'.$name.'/';
 
 		$this->_setupControllersPaths();
 	}
@@ -278,8 +279,8 @@ class AssetCollectorComponent extends Component {
             }
         }
 
-        foreach (array('jsHelpersBlock', 'controllersPath', 'controllersBlock', 'assetsVar') as $setting) {
-            if (!empty($settings[$setting])) {
+        foreach (array('jsHelpersBlock', 'theme', 'controllersPath', 'controllersBlock', 'assetsVar') as $setting) {
+            if (isset($settings[$setting]) || !empty($settings[$setting])) {
                 $this->settings[$setting] = $settings[$setting];
             }
         }
@@ -365,6 +366,7 @@ class AssetCollectorComponent extends Component {
 		}
 
         $controllersPath = $this->settings['controllersPath'];
+		$theme = $this->settings['theme'];
 		
 		// Tack on a trailing slash if there isn't one there already
 		if (substr($controllersPath, strlen($controllersPath)) != DS) {
@@ -372,7 +374,7 @@ class AssetCollectorComponent extends Component {
 		}
 
         foreach ($this->controllerAssets as $type => $enabled) {
-            if ($enabled && (!file_exists(WEBROOT_DIR.DS.$type.DS.$controllersPath))) {
+            if ($enabled && (!file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath']))) {
                 $this->controllerAssets[$type] = FALSE;
             }
         }
@@ -396,19 +398,19 @@ class AssetCollectorComponent extends Component {
 
         switch ($type) {
             case 'css':
-                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).$this->settings['controllersPath'].$controller.'.css')) {
+                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.css')) {
                     $this->$type($this->settings['controllersPath'].$controller);
                 }
-                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).$this->settings['controllersPath'].$controller.DS.$action.'.css')) {
+                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.css')) {
                     $this->$type($this->settings['controllersPath'].$controller.DS.$action);
                 }
                 break;
             case 'js':
-                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).$this->settings['controllersPath'].$controller.'.js')) {
-                    $this->$type($this->settings['controllersPath'].$controller.'.js');
+                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.js')) {
+                    $this->$type($this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.js');
                 }
-                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).$this->settings['controllersPath'].$controller.DS.$action.'.js')) {
-                    $this->$type($this->settings['controllersPath'].$controller.DS.$action.'.js');
+                if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.js')) {
+                    $this->$type($this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.js');
                 }
                 break;
         }
