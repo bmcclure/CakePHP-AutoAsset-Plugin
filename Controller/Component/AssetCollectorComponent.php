@@ -407,10 +407,10 @@ class AssetCollectorComponent extends Component {
                 break;
             case 'js':
                 if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.js')) {
-                    $this->$type($this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.js');
+                    $this->$type(DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.js');
                 }
                 if (file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.js')) {
-                    $this->$type($this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.js');
+                    $this->$type(DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.js');
                 }
                 break;
         }
