@@ -380,7 +380,7 @@ class AssetCollectorComponent extends Component {
 		$theme = $this->settings['theme'];
 
 		// Tack on a trailing slash if there isn't one there already
-		if (substr($controllersPath, strlen($controllersPath)) != DS) {
+		if (substr($controllersPath, strlen($controllersPath)-1) != DS) {
 			$this->settings['controllersPath'] .= DS;
 		}
 
