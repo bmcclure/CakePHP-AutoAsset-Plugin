@@ -75,6 +75,8 @@ class AssetCollectorComponent extends Component {
     protected $defaults = array(
         'jsHelpersBlock' => 'headTop',
         'controllersPath' => 'controllers',
+        'theme' => '',
+        'subfolder' => '',
         'controllersBlock' => 'head',
         'assetsVar' => 'assets',
     );
@@ -162,14 +164,24 @@ class AssetCollectorComponent extends Component {
         return TRUE;
     }
 
-	/**
-	 * Changes the path to controller/action files after the component has already been initialized
-	 */
-	public function resetControllersPath($path) {
-		$this->settings['controllersPath'] = $path;
+    /**
+     * Changes the path to controller/action files after the component has already been initialized
+     */
+    public function setThemeName($name) {
+        $this->settings['theme'] = 'theme'.DS.$name.DS;
 
-		$this->_setupControllersPaths();
-	}
+        $this->_setupControllersPaths();
+    }
+
+    /**
+     * Changes the path to controller/action files after the component has already been initialized
+     */
+    public function setSubfolderName($subfolder) {
+        if (strlen($subfolder))
+            $this->settings['subfolder'] = $subfolder.DS;
+
+        $this->_setupControllersPaths();
+    }
 
     /**
      * @param $name
@@ -278,8 +290,8 @@ class AssetCollectorComponent extends Component {
             }
         }
 
-        foreach (array('jsHelpersBlock', 'controllersPath', 'controllersBlock', 'assetsVar') as $setting) {
-            if (!empty($settings[$setting])) {
+        foreach (array('jsHelpersBlock', 'theme', 'subfolder', 'controllersPath', 'controllersBlock', 'assetsVar') as $setting) {
+            if (isset($settings[$setting]) || !empty($settings[$setting])) {
                 $this->settings[$setting] = $settings[$setting];
             }
         }
@@ -365,14 +377,15 @@ class AssetCollectorComponent extends Component {
 		}
 
         $controllersPath = $this->settings['controllersPath'];
-		
+		$theme = $this->settings['theme'];
+
 		// Tack on a trailing slash if there isn't one there already
-		if (substr($controllersPath, strlen($controllersPath)) != DS) {
+		if (substr($controllersPath, strlen($controllersPath)-1) != DS) {
 			$this->settings['controllersPath'] .= DS;
 		}
 
         foreach ($this->controllerAssets as $type => $enabled) {
-            if ($enabled && (!file_exists(WEBROOT_DIR.DS.$type.DS.$controllersPath))) {
+            if ($enabled && (!file_exists(substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath']))) {
                 $this->controllerAssets[$type] = FALSE;
             }
         }
@@ -394,8 +407,28 @@ class AssetCollectorComponent extends Component {
         $controller = Inflector::underscore($this->request->params['controller']);
         $action = Inflector::underscore($this->request->params['action']);
 
-        $this->$type($this->settings['controllersPath'].$controller);
-        $this->$type($this->settings['controllersPath'].$controller.DS.$action);
+        switch ($type) {
+            case 'css':
+                $file = substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.css';
+                if (file_exists($file)) {
+                    $this->$type($this->settings['controllersPath'].$controller);
+                }
+                $file = substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.css';
+                if (file_exists($file)) {
+                    $this->$type($this->settings['controllersPath'].$controller.DS.$action);
+                }
+                break;
+            case 'js':
+                $file = substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.js';
+                if (file_exists($file)) {
+                    $this->$type(DS.$this->settings['subfolder'].$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.'.js');
+                }
+                $file = substr(WWW_ROOT,0,strlen(WWW_ROOT)-1).DS.$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.js';
+                if (file_exists($file)) {
+                    $this->$type(DS.$this->settings['subfolder'].$this->settings['theme'].$type.DS.$this->settings['controllersPath'].$controller.DS.$action.'.js');
+                }
+                break;
+        }
     }
 
     /**
