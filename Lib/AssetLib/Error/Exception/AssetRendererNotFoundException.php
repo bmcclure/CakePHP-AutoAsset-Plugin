@@ -1,18 +1,18 @@
 <?php
+namespace AssetLib\Error\Exception;
+
 /**
  *
  */
-class AssetRendererNotFoundException extends CakeException {
+class AssetRendererNotFoundException extends \Exception {
     /**
      * @param null $message
      * @param int $code
      */
-    public function __construct($message = NULL, $code = 500) {
+    public function __construct($message = null, $code = 500) {
         if (!is_string($message)) {
-            $renderer = 'The specified asset renderer';
-            if (!empty($message['renderer'])) {
-                $renderer = 'Asset renderer '.$message['renderer'];
-            }
+            $renderer = (empty($message['renderer'])) ? 'The specified asset renderer' :
+                "Asset renderer {$message['renderer']}";
 
             $message = "$renderer was not found in this helper.";
         }
@@ -20,4 +20,5 @@ class AssetRendererNotFoundException extends CakeException {
         parent::__construct($message, $code);
     }
 }
+
 ?>

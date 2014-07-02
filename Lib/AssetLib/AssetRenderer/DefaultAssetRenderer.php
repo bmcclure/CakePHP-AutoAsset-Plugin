@@ -1,9 +1,13 @@
 <?php
-require_once 'BaseAssetRenderer.php';
-require_once dirname(dirname(__FILE__)).DS.'Error/Exception/HelperMethodNotFoundException.php';
+namespace AssetLib\AssetRenderer;
 
-//App::uses('BaseAssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
-//App::uses('HelperMethodNotFoundException', 'AutoAsset.Lib/AssetLib/Error/Exception');
+use AssetLib\Asset\AssetInterface;
+use AssetLib\Asset\CssAsset;
+use AssetLib\Asset\JsAsset;
+use AssetLib\Asset\JsGlobalAsset;
+use AssetLib\Asset\MetaTagAsset;
+use AssetLib\Error\Exception\AssetTypeUnsupportedException;
+use AssetLib\Error\Exception\HelperMethodNotFoundException;
 
 /**
  * The default AssetRenderer which uses provided CakePHP helpers to render assets
@@ -12,11 +16,11 @@ class DefaultAssetRenderer extends BaseAssetRenderer {
     /**
      * @var array
      */
-    protected $assetTypeDefaults = array(
+    protected $assetTypeDefaults = [
         'className' => '',
         'plugin' => 'AutoAsset',
         'helper' => 'Html',
-    );
+    ];
 
     /**
      * @var array
@@ -26,136 +30,147 @@ class DefaultAssetRenderer extends BaseAssetRenderer {
     /**
      * @var array
      */
-    protected $assetTypes = array(
-        'css' => array(),
-        'js' => array(),
-        'jsGlobal' => array(),
-        'metaTag' => array(),
-    );
+    protected $assetTypes = [
+        'css' => [],
+        'js' => [],
+        'jsGlobal' => [],
+        'metaTag' => [],
+    ];
+
+    protected $knownTypes = ['Css', 'Js', 'JsGlobal', 'MetaTag'];
 
     /**
      * @param array $helpers
      * @param array $assetTypes
      */
-    public function __construct($helpers = array(), $assetTypes = array()) {
+    public function __construct($helpers = [], $assetTypes = []) {
         $this->helpers = $helpers;
 
-        $assetTypes = (array) $assetTypes;
-
-        foreach ($this->assetTypes as $idx => $assetType) {
-            if (is_int($idx)) {
-                $this->assetTypes[$assetType] = array();
-                unset($this->assetTypes[$idx]);
-            }
-        }
-
-        foreach ($assetTypes as $idx => $assetType) {
-            if (is_int($idx)) {
-                $assetTypes[$assetType] = array();
-                unset($assetTypes[$idx]);
-            }
-        }
-
-        $this->assetTypes = array_merge($this->assetTypes, $assetTypes);
+        $this->assetTypes = array_merge($this->_flipAndFillIfNeeded($this->assetTypes),
+            $this->_flipAndFillIfNeeded((array) $assetTypes));
 
         foreach ($this->assetTypes as $type => $options) {
-            $this->assetTypes[$type] = array_merge((array) $this->assetTypeDefaults, (array) $options);
+            $this->assetTypes[$type] = (array) $options + (array) $this->assetTypeDefaults;
 
-            if (empty($definition['className'])) {
-                $this->assetTypes[$type]['className'] = Inflector::camelize($type)."Asset";
+            if (empty($this->assetTypes[$type]['className'])) {
+                $this->assetTypes[$type]['className'] = \Inflector::camelize($type) . "Asset";
             }
         }
     }
 
     /**
+     * @param $array
+     *
+     * @return array
+     */protected function _flipAndFillIfNeeded($array) {
+        if (!(bool)count(array_filter(array_keys($array), 'is_string'))) {
+            $array = array_fill_keys($array, []);
+        }
+
+        return $array;
+    }
+
+    /**
      * @param AssetInterface $asset
+     *
      * @return mixed
-     * @throws AssetTypeUsupportedException
+     * @throws AssetTypeUnsupportedException
      */
     protected function _renderAsset(AssetInterface $asset) {
-        if (is_a($asset, 'CssAsset')) {
-            return $this->renderCss($asset);
-        } elseif (is_a($asset, 'JsAsset')) {
-            return $this->renderJs($asset);
-        } elseif (is_a($asset, 'JsGlobalAsset')) {
-            return $this->renderJsGlobal($asset);
-        } elseif (is_a($asset, 'MetaTagAsset')) {
-            return $this->renderMetaTag($asset);
+        foreach ($this->knownTypes as $type) {
+            if (!is_a($asset, "AssetLib\\Asset\\{$type}Asset")) {
+                continue;
+            }
+
+            $function = "render$type";
+
+            if (!method_exists($this, $function)) {
+                break;
+            }
+
+            return $this->$function($asset);
         }
 
         throw new AssetTypeUnsupportedException();
     }
 
     /**
+     * @param $typeKey
+     * @param $helperMethod
+     * @param array $helperParams
+     *
+     * @throws \AssetLib\Error\Exception\HelperMethodNotFoundException
+     * @internal param \AssetLib\Asset\AssetInterface $asset
+     * @internal param $assetMethod
+     * @internal param array $helperOptions
+     *
+     * @return mixed
+     */
+    protected function _renderType($typeKey, $helperMethod, $helperParams = []) {
+        $helper = $this->helpers[$this->assetTypes[$typeKey]['helper']];
+
+        if (!is_a($helper, 'Helper') || !method_exists($helper, $helperMethod)) {
+            throw new HelperMethodNotFoundException();
+        }
+
+        return call_user_func_array([$helper, $helperMethod], $helperParams);
+    }
+
+    /**
      * @param CssAsset $asset
+     *
      * @return mixed
      * @throws HelperMethodNotFoundException
      */
     public function renderCss(CssAsset $asset) {
-        $helper = $this->helpers[$this->assetTypes['css']['helper']];
+        $params = [$asset->getPath(), $asset->getRel(), ['inline' => true]];
 
-        if (!is_a($helper, 'Helper') || !method_exists($helper, 'css')) {
-            throw new HelperMethodNotFoundException();
-        }
-
-        return $helper->css($asset->getPath(), $asset->getRel(), array('inline' => TRUE));
+        return $this->_renderType('css', 'css', $params);
     }
 
     /**
      * @param JsAsset $asset
+     *
      * @return mixed
      * @throws HelperMethodNotFoundException
      */
     public function renderJs(JsAsset $asset) {
-        $helper = $this->helpers[$this->assetTypes['js']['helper']];
+        $params = [$asset->getPath(), ['inline' => true]];
 
-        if (!is_a($helper, 'Helper') || !method_exists($helper, 'script')) {
-            throw new HelperMethodNotFoundException();
-        }
-
-        return $helper->script($asset->getPath(), array('inline' => TRUE));
+        return $this->_renderType('js', 'script', $params);
     }
+
+
 
     /**
      * @param JsGlobalAsset $asset
+     *
      * @return mixed
      * @throws HelperMethodNotFoundException
      */
     public function renderJsGlobal(JsGlobalAsset $asset) {
-        $helper = $this->helpers[$this->assetTypes['jsGlobal']['helper']];
+        $params = [$asset->getString(), ['inline' => true]];
 
-        if (!is_a($helper, 'Helper') || !method_exists($helper, 'scriptBlock')) {
-            throw new HelperMethodNotFoundException();
-        }
-
-        return $helper->scriptBlock($asset->getString(), array('inline' => TRUE));
+        return $this->_renderType('jsGlobal', 'scriptBlock', $params);
     }
 
     /**
      * @param MetaTagAsset $asset
+     *
      * @return mixed
      * @throws HelperMethodNotFoundException
      */
     public function renderMetaTag(MetaTagAsset $asset) {
-        $helper = $this->helpers[$this->assetTypes['metaTag']['helper']];
-
-        if (!is_a($helper, 'Helper') || !method_exists($helper, 'scriptBlock')) {
-            throw new HelperMethodNotFoundException();
-        }
-
         $numberOfValues = $asset->numberOfValues();
 
-        $result = "";
+        $result = [];
 
         for ($i = 0; $i < $numberOfValues; $i++) {
-            if (!empty($result)) {
-                $result .= "\n";
-            }
+            $params = [$asset->getType($i), $asset->getUrl($i), (array)$asset->getOptions($i)];
 
-            $result .= $helper->meta($asset->getType($i), $asset->getUrl($i), (array) $asset->getOptions($i));
+            $result[] = $this->_renderType('metaTag', 'meta', $params);
         }
 
-        return $result;
+        return implode("\n", $result);
     }
 }
-?>

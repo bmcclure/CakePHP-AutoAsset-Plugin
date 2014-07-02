@@ -1,24 +1,18 @@
 <?php
+namespace AssetLib\Error\Exception;
+
 /**
  *
  */
-class HelperMethodNotFoundException extends CakeException {
+class HelperMethodNotFoundException extends \Exception {
     /**
      * @param null $message
      * @param int $code
      */
-    public function __construct($message = NULL, $code = 500) {
+    public function __construct($message = null, $code = 500) {
         if (!is_string($message)) {
-            $method = 'The specified method';
-            if (!empty($message['helperMethod'])) {
-                $method = 'Method '.$message['helperMethod'];
-            }
-
-            $helper = 'helper';
-            if (!empty($message['helper'])) {
-                $helper .= ' '.$message['helper'];
-            }
-
+            $method = (empty($message['helperMethod'])) ? 'The specified method' : "Method {$message['helperMethod']}";
+            $helper = (empty($message['helper'])) ? 'helper' : " {$message['helper']}";
 
             $message = "$method of $helper does not exist.";
         }
@@ -26,4 +20,5 @@ class HelperMethodNotFoundException extends CakeException {
         parent::__construct($message, $code);
     }
 }
+
 ?>

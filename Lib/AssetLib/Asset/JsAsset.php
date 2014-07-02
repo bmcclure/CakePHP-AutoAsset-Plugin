@@ -1,8 +1,5 @@
 <?php
-require_once 'AssetInterface.php';
-require_once 'BaseAsset.php';
-require_once 'FileAsset.php';
-
+namespace AssetLib\Asset;
 
 /**
  * Represents a Javascript file asset
@@ -25,4 +22,5 @@ class JsAsset extends FileAsset implements AssetInterface {
         return file_exists($fullPath) ? $fullPath : "$fullPath.js";
     }
 }
+
 ?>

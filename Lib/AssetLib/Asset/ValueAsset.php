@@ -1,27 +1,25 @@
 <?php
-require_once 'AssetInterface.php';
-require_once 'BaseAsset.php';
-
+namespace AssetLib\Asset;
 
 /**
  * Represents an asset tha is a key/value pair
  */
 abstract class ValueAsset extends BaseAsset implements AssetInterface {
     /**
-     * @var
+     * @var string
      */
     protected $name;
 
     /**
-     * @var null
+     * @var mixed
      */
     protected $value;
 
     /**
-     * @param $name
-     * @param null $value
+     * @param string $name
+     * @param mixed $value
      */
-    public function __construct($name, $value = NULL) {
+    public function __construct($name, $value = null) {
         $this->name = $name;
         $this->value = $value;
 
@@ -49,4 +47,5 @@ abstract class ValueAsset extends BaseAsset implements AssetInterface {
         return $this->value;
     }
 }
+
 ?>

@@ -1,5 +1,8 @@
 <?php
-require_once 'Asset/AssetInterface.php';
+namespace AssetLib;
+
+use AssetLib\Asset;
+use AssetLib\Asset\AssetInterface;
 
 /**
  * Represents any basic collection of AssetInterface objects
@@ -13,8 +16,8 @@ class AssetCollection {
     /**
      * @param array $assets
      */
-    public function __construct($assets = array()) {
-        $this->assets = $assets;
+    public function __construct($assets = []) {
+        $this->assets = (array) $assets;
     }
 
     /**
@@ -29,7 +32,7 @@ class AssetCollection {
      * @param int $position
      */
     public function insert(AssetInterface $asset, $position = 0) {
-        $this->assets = array_splice($this->assets, $position, 0, $asset);
+        array_splice($this->assets, $position, 0, [$asset]);
     }
 
     /**
@@ -39,12 +42,13 @@ class AssetCollection {
     public function insertAfter(AssetInterface $existingAsset, AssetInterface $asset) {
         $pos = array_search($existingAsset, $this->assets);
 
-        if ($pos === FALSE) {
+        if ($pos === false) {
             $this->insert($asset);
+
             return;
         }
 
-        $this->assets = array_splice($this->assets, $pos + 1, 0, $asset);
+        array_splice($this->assets, $pos + 1, 0, [$asset]);
     }
 
     /**
@@ -54,12 +58,13 @@ class AssetCollection {
     public function insertBefore(AssetInterface $existingAsset, AssetInterface $asset) {
         $pos = array_search($existingAsset, $this->assets);
 
-        if ($pos === FALSE) {
+        if ($pos === false) {
             $this->insert($asset);
+
             return;
         }
 
-        $this->assets = array_splice($this->assets, $pos, 0, $asset);
+        array_splice($this->assets, $pos, 0, [$asset]);
     }
 
     /**
@@ -68,8 +73,8 @@ class AssetCollection {
     public function remove(AssetInterface $asset) {
         $pos = array_search($asset, $this->assets);
 
-        if ($pos !== FALSE) {
-            $this->assets = array_splice($this->assets, $pos, count($this->assets), array_slice($this->assets, $pos + 1));
+        if ($pos !== false) {
+            array_splice($this->assets, $pos, count($this->assets), array_slice($this->assets, $pos + 1));
         }
     }
 
@@ -80,8 +85,9 @@ class AssetCollection {
     public function replace(AssetInterface $oldAsset, AssetInterface $asset) {
         $pos = array_search($oldAsset, $this->assets);
 
-        if ($pos === FALSE) {
+        if ($pos === false) {
             $this->insert($asset);
+
             return;
         }
 

@@ -1,4 +1,6 @@
 <?php
+namespace AssetLib\Asset;
+
 /**
  * Represents the most basic class that all assets inherit.
  */
@@ -10,5 +12,13 @@ interface AssetInterface {
      * @return bool
      */
     public function isValid();
+
+    /**
+     * Returns a string representation of the type of asset this is
+     *
+     * @return mixed
+     */
+    public function getAssetType();
 }
+
 ?>

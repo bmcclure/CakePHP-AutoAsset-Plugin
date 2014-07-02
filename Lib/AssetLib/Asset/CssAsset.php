@@ -1,8 +1,5 @@
 <?php
-require_once 'AssetInterface.php';
-require_once 'BaseAsset.php';
-require_once 'FileAsset.php';
-
+namespace AssetLib\Asset;
 
 /**
  * Represents a CSS file to be used
@@ -21,10 +18,12 @@ class CssAsset extends FileAsset implements AssetInterface {
     /**
      * @param $path
      * @param string $rel
-     * @param string $mediaType
+     * @param string $media
      * @param string $basePath
+     *
+     * @internal param string $mediaType
      */
-    public function __construct($path, $rel = "stylesheet", $media = 'screen', $basePath = CSS) {
+    public function __construct($path, $rel = 'stylesheet', $media = 'screen', $basePath = CSS) {
         $this->rel = $rel;
         $this->media = $media;
 
@@ -54,4 +53,5 @@ class CssAsset extends FileAsset implements AssetInterface {
         return $this->media;
     }
 }
+
 ?>

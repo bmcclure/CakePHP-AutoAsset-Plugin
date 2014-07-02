@@ -1,6 +1,5 @@
 <?php
-require_once 'AssetInterface.php';
-require_once 'BaseAsset.php';
+namespace AssetLib\Asset;
 
 /**
  * Represents any asset that is a file
@@ -11,6 +10,9 @@ abstract class FileAsset extends BaseAsset implements AssetInterface {
      */
     protected $path;
 
+    /**
+     * @var bool
+     */
     protected $absolute = false;
 
     /**
@@ -31,21 +33,16 @@ abstract class FileAsset extends BaseAsset implements AssetInterface {
             $this->basePath = $basePath;
         }
 
-
-
         parent::__construct();
     }
 
     /**
      * @param $path
+     *
      * @return bool
      */
     protected function _isAbsoluteUrl($path) {
-        if ((substr($path, 0, 7) != 'http://') && (substr($path, 0, 8) != 'https://')) {
-            return false;
-        }
-
-        return true;
+        return (preg_match('%^https?://%', $path));
     }
 
     /**
@@ -55,12 +52,10 @@ abstract class FileAsset extends BaseAsset implements AssetInterface {
         $fullPath = $this->getFullPath();
 
         if ($this->absolute) {
-            return preg_match('|^http(s)?://[a-z0-9-]+(.[a-z0-9-]+)*(:[0-9]+)?(/.*)?$|i', $fullPath);
+            return (bool) filter_var($fullPath, FILTER_VALIDATE_URL);
         } else {
             return file_exists($fullPath) && is_readable($fullPath);
         }
-
-
     }
 
     /**
@@ -74,15 +69,18 @@ abstract class FileAsset extends BaseAsset implements AssetInterface {
         }
     }
 
+    /**
+     * @return string
+     */
     protected function _buildFullPath() {
-        return $this->basePath.DS.$this->path;
+        return $this->basePath . DS . $this->path;
     }
 
     /**
      * @return array
      */
     public function getParameters() {
-        return array($this->path);
+        return [$this->path];
     }
 
     /**
@@ -92,4 +90,5 @@ abstract class FileAsset extends BaseAsset implements AssetInterface {
         return $this->path;
     }
 }
+
 ?>

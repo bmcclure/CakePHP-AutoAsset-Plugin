@@ -64,11 +64,11 @@ Some examples of how to load AutoAsset:
 
 First, if loading plugins individually:
 
-    CakePlugin::load('AutoAsset'); //Loads just this plugin
+    CakePlugin::load('AutoAsset', array('bootstrap' => true); //Loads just this plugin
 
 Or, to load all plugins automatically:
 
-    CakePlugin::loadAll(); // Loads all plugins at once
+    CakePlugin::loadAll(array(array('routes' => true, 'bootstrap' => true, 'ignoreMissing' => true))); // Loads all plugins at once
 
 
 Usage
@@ -78,7 +78,7 @@ Placing your media files
 ------------------------
 
 You can store your media files anywhere within your webroot, but the easiest way to use the plugin is to follow 
-the same conventionsused by CakePHP and put JavaScript files under 'app/webroot/js/' and CSS files under 
+the same conventions used by CakePHP and put JavaScript files under 'app/webroot/js/' and CSS files under
 'app/webroot/css/'. This will require the least configuration, and that's usually preferred.
 
 AutoAsset is able to automatically include CSS and JS files corresponding to the controller and/or action in the
@@ -152,7 +152,7 @@ Next, load the AssetCollector component in your AppController. Your $components 
 Or maybe you want to provide a couple of options to AssetCollector:
 
     public $components = array(
-        'AutoAsset.AssetGatherer' => array(
+        'AutoAsset.AssetCollector' => array(
             'asyncJs' => 'app',
             'requiredJs' => array('libs/modernizr-1.7-custom.min', 'libs/selectivizr'),
         ),

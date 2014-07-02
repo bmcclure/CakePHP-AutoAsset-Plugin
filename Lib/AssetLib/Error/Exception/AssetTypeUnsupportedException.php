@@ -1,23 +1,18 @@
 <?php
+namespace AssetLib\Error\Exception;
+
 /**
  *
  */
-class AssetTypeUnsupportedException extends CakeException {
+class AssetTypeUnsupportedException extends \Exception {
     /**
      * @param null $message
      * @param int $code
      */
-    public function __construct($message = NULL, $code = 500) {
+    public function __construct($message = null, $code = 500) {
         if (!is_string($message)) {
-            $type = 'The asset type being used';
-            if (!empty($message['type'])) {
-                $type = 'Asset type '.$message['type'];
-            }
-
-            $class = 'this class';
-            if (!empty($message['class'])) {
-                $class = 'class '.$message['class'];
-            }
+            $type = (empty($message['type'])) ? 'The asset type being used' : "Asset type {$message['type']}";
+            $class = (empty($message['class'])) ? 'this class' : "class {$message['class']}";
 
             $message = "$type is not supported by $class.";
         }
@@ -25,4 +20,5 @@ class AssetTypeUnsupportedException extends CakeException {
         parent::__construct($message, $code);
     }
 }
+
 ?>

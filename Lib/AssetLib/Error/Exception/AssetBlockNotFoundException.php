@@ -1,19 +1,18 @@
 <?php
+namespace AssetLib\Error\Exception;
+
 /**
  *
  */
-class AssetBlockNotFoundException extends CakeException {
+class AssetBlockNotFoundException extends \Exception {
     /**
      * @param null $message
      * @param int $code
      */
-    public function __construct($message = NULL, $code = 500) {
+    public function __construct($message = null, $code = 500) {
         if (!is_string($message)) {
-            $block = 'The specified asset block';
-            if (!empty($message['assetBLock'])) {
-                $block = 'Asset block '.$message['assetBLock'];
-            }
-
+            $block = (empty($message['assetBlock'])) ? 'The specified asset block' :
+                "Asset block {$message['assetBlock']}";
 
             $message = "$block does not exist.";
         }
@@ -21,4 +20,5 @@ class AssetBlockNotFoundException extends CakeException {
         parent::__construct($message, $code);
     }
 }
+
 ?>

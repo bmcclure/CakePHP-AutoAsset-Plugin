@@ -1,5 +1,5 @@
 <?php
-require_once 'AssetInterface.php';
+namespace AssetLib\Asset;
 
 /**
  * The basic abstract Asset class that most assets extend.
@@ -17,6 +17,17 @@ abstract class BaseAsset implements AssetInterface {
      * @abstract
      * @return bool
      */
-    //abstract public function isValid();
+    abstract public function isValid();
+
+    /**
+     * @return string
+     */
+    public function getAssetType() {
+        $reflect = new \ReflectionClass($this);
+        $className = $reflect->getShortName();
+
+        return \Inflector::variable(substr($className, 0, -5));
+    }
 }
+
 ?>

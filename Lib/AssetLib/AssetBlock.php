@@ -1,9 +1,8 @@
 <?php
-require_once 'Asset/AssetInterface.php';
-require_once 'AssetCollection.php';
+namespace AssetLib;
 
-//App::uses('AssetCollection', 'AutoAsset.Lib/AssetLib');
-//App::uses('AssetInterface', 'AutoAsset.Lib/AssetLib/Asset');
+use AssetLib\Asset;
+use AssetLib\Asset\AssetInterface;
 
 /**
  * Represents a block of assets to be output in a region of a site
@@ -29,8 +28,9 @@ class AssetBlock {
     /**
      * @param string $renderer
      * @param array $conditional
+     * @param array $ignoreTypes
      */
-    public function __construct($renderer = 'default', $conditional = array(), $ignoreTypes = array()) {
+    public function __construct($renderer = 'default', $conditional = [], $ignoreTypes = []) {
         $this->assets = new AssetCollection();
 
         $this->renderer = $renderer;
@@ -40,11 +40,17 @@ class AssetBlock {
         $this->ignoreTypes = $ignoreTypes;
     }
 
+    /**
+     * @return array
+     */
     public function getIgnoreTypes() {
         return $this->ignoreTypes;
     }
 
-    public function setIgnoreTypes(array $ignoreTypes = array()) {
+    /**
+     * @param array $ignoreTypes
+     */
+    public function setIgnoreTypes(array $ignoreTypes = []) {
         $this->ignoreTypes = $ignoreTypes;
     }
 
@@ -69,6 +75,9 @@ class AssetBlock {
         return $this->assets;
     }
 
+    /**
+     * @param AssetCollection $collection
+     */
     public function setCollection(AssetCollection $collection) {
         $this->assets = $collection;
     }
@@ -80,12 +89,17 @@ class AssetBlock {
         return $this->assets->getAssets();
     }
 
+    /**
+     * @return string
+     */
     public function getRenderer() {
         return $this->renderer;
     }
 
+    /**
+     * @return array
+     */
     public function getConditional() {
         return $this->conditional;
     }
 }
-?>

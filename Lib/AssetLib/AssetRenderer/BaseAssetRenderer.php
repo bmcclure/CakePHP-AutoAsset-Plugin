@@ -1,13 +1,15 @@
 <?php
-require_once 'AssetRenderer.php';
-require_once dirname(dirname(__FILE__)).DS.'Error/Exception/AssetTypeUnsupportedException.php';
-//App::uses('AssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
-//App::uses('AssetTypeUnsupportedException', 'AutoAsset.Lib/AssetLib/Error/Exception');
+namespace AssetLib\AssetRenderer;
+
+use AssetLib\AssetBlock;
+use AssetLib\AssetCollection;
+use AssetLib\Asset\AssetInterface;
+use AssetLib\Error\Exception\AssetTypeUnsupportedException;
 
 /**
  * The base AssetRenderer that others inherit from
  */
-abstract class BaseAssetRenderer implements AssetRenderer {
+abstract class BaseAssetRenderer implements AssetRendererInterface {
     /**
      * @var array
      */
@@ -16,12 +18,13 @@ abstract class BaseAssetRenderer implements AssetRenderer {
     /**
      * @param array $assetTypes
      */
-    protected function __construct($assetTypes = array()) {
+    protected function __construct($assetTypes = []) {
         $this->assetTypes = $assetTypes;
     }
 
     /**
      * @param $assetType
+     *
      * @return bool
      */
     public function supports($assetType) {
@@ -30,53 +33,64 @@ abstract class BaseAssetRenderer implements AssetRenderer {
 
     /**
      * @param $assetType
+     *
      * @throws AssetTypeUnsupportedException
      */
     protected function validateType($assetType) {
         if (!$this->supports($assetType)) {
-            throw new AssetTypeUnsupportedException(array('type' => $assetType, 'class' => get_called_class()));
+            throw new AssetTypeUnsupportedException(['type' => $assetType, 'class' => get_called_class()]);
         }
-    }
-
-    protected function getTypeOfAsset(AssetInterface $asset) {
-        return Inflector::variable(substr(get_class($asset), 0, -5));
-    }
-
-    /**
-     * @param AssetBlock $assetBlock
-     * @return string
-     */
-    public function renderBlock(AssetBlock $assetBlock) {
-        $output = "";
-
-        foreach ($assetBlock->getAssets() as $asset) {
-            $output .= $this->render($asset);
-        }
-
-        return $output;
-    }
-
-    /**
-     * @param AssetCollection $assetCollection
-     * @return string
-     */
-    public function renderCollection(AssetCollection $assetCollection) {
-        $output = "";
-
-        foreach ($assetCollection->getAssets() as $asset) {
-            $output .= $this->render($asset);
-        }
-
-        return $output;
     }
 
     /**
      * @param AssetInterface $asset
+     *
      * @return mixed
-     * @throws AssetTypeUsupportedException
+     */
+    protected function getTypeOfAsset(AssetInterface $asset) {
+        return $asset->getAssetType();
+    }
+
+    /**
+     * @param AssetBlock $assetBlock
+     *
+     * @return string
+     */
+    public function renderBlock(AssetBlock $assetBlock) {
+        return $this->_renderAssets($assetBlock->getAssets());
+    }
+
+    /**
+     * @param AssetCollection $assetCollection
+     *
+     * @return string
+     */
+    public function renderCollection(AssetCollection $assetCollection) {
+        return $this->_renderAssets($assetCollection->getAssets());
+    }
+
+    /**
+     * @param array $assets
+     *
+     * @return string
+     */
+    protected function _renderAssets(array $assets) {
+        $output = [];
+
+        foreach ($assets as $asset) {
+            $output[] = $this->render($asset);
+        }
+
+        return implode("\n", $output);
+    }
+
+    /**
+     * @param AssetInterface $asset
+     *
+     * @return mixed
+     * @throws AssetTypeUnsupportedException
      */
     public function render(AssetInterface $asset) {
-
         $this->validateType($this->getTypeOfAsset($asset));
 
         return $this->_renderAsset($asset);
@@ -84,9 +98,12 @@ abstract class BaseAssetRenderer implements AssetRenderer {
 
     /**
      * @abstract
+     *
      * @param AssetInterface $asset
+     *
      * @return mixed
      */
     protected abstract function _renderAsset(AssetInterface $asset);
 }
+
 ?>

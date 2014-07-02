@@ -1,13 +1,12 @@
 <?php
+use AssetLib\Asset\AssetInterface;
+use AssetLib\AssetBlock;
+use AssetLib\AssetCollection;
+use AssetLib\AssetRenderer\AssetRendererInterface;
+use AssetLib\AssetRenderer\DefaultAssetRenderer;
+use AssetLib\Error\Exception\AssetRendererNotFoundException;
+
 App::uses('AppHelper', 'View/Helper');
-App::uses('AssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
-App::uses('BaseAssetRenderer', 'AutoAsset.Lib/AssetLib/AssetRenderer');
-App::uses('DefaultAssetRenderer', 'AutoAsset.AssetLib/AssetRenderer');
-App::uses('AssetRendererNotFoundException', 'AutoAsset.AssetLib/Error/Exception');
-App::uses('AssetBlockNotFoundException', 'AutoAsset.AssetLib/Error/Exception');
-App::uses('AssetTypeUnsupportedException', 'AutoAsset.AssetLib/Error/Exception');
-App::uses('HelperMethodNotFoundException', 'AutoAsset.AssetLib/Error/Exception');
-App::uses('MissingAssetClassException', 'AutoAsset.AssetLib/Error/Exception');
 
 /**
  * AssetLoader Helper
@@ -19,134 +18,158 @@ App::uses('MissingAssetClassException', 'AutoAsset.AssetLib/Error/Exception');
  * @property HtmlHelper $Html
  */
 class AssetRendererHelper extends AppHelper {
-	/**
-	 * View helpers required by this helper
-	 */
-	public $helpers = array('Html', 'AutoAsset.AsyncAsset');
+    /**
+     * View helpers required by this helper
+     */
+    public $helpers = ['Html', 'AutoAsset.AsyncAsset'];
 
     /**
      * @var array
      */
-    public $settings = array(
-		'assetsVar' => 'assets',
-        'helpers' => array('Html', 'AutoAsset.AsyncAsset'),
-        'assetTypes' => array('js', 'css', 'jsGlobal', 'metaTag'),
-        'asyncTypes' => array('js', 'css'),
-	);
+    public $settings = [
+        'assetsVar' => 'assets',
+        'helpers' => ['Html', 'AutoAsset.AsyncAsset'],
+        'assetTypes' => ['js', 'css', 'jsGlobal', 'metaTag'],
+        'asyncTypes' => ['js', 'css'],
+    ];
 
     /**
      * @var array
      */
-    protected $renderers = array();
+    protected $renderers = [];
 
     /**
      * @var array
      */
-    protected $blocksRendered = array();
+    protected $blocksRendered = [];
 
     /**
      * @var array
      */
-    protected $assets = array();
+    protected $assets = [];
 
-/**
- * Constructor.
- *
- * @access public
- */
-    function __construct(View $View, $settings = array()) {
+    /**
+     * Constructor.
+     *
+     * @access public
+     */
+    function __construct(View $View, $settings = []) {
         parent::__construct($View, (array)$settings);
 
-		$this->settings = array_merge($this->settings, (array) $settings);
+        $this->settings = (array)$settings + $this->settings;
 
         if (isset($View->viewVars[$this->settings['assetsVar']])) {
             $this->assets = $View->viewVars[$this->settings['assetsVar']];
+
+            unset($View->viewVars[$this->settings['assetsVar']]);
         }
 
         $this->setDefaultRenderer($this->settings['helpers'], $this->settings['assetTypes']);
+
         $this->setAsyncRenderer();
     }
-    
+
+    /**
+     * Render one or more asset blocks. Leave $name null to render all asset blocks that have not been rendered.
+     *
+     * @param null $name
+     *
+     * @return string
+     */
     public function render($name = null) {
-    	if (is_a($name, 'AssetBlock')) {
-    		return $this->renderBlock($name);
-    	}
-    	
-    	if (empty($name)) {
+        if (is_a($name, 'AssetLib\AssetBlock')) {
+            return $this->renderBlock($name);
+        }
+
+        if (empty($name)) {
             $name = array_keys($this->assets);
         }
 
-        $output = "";
+        $output = [];
 
-        foreach ((array) $name as $blockName) {
-            if (array_search($blockName, $this->blocksRendered) !== FALSE) {
+        foreach ((array)$name as $blockName) {
+            if (array_search($blockName, $this->blocksRendered) !== false) {
                 continue;
             }
 
-            /**
-             * @var AssetBlock $block
-             */
+            /** @var AssetBlock $block */
             $block = $this->assets[$blockName];
-            if (!is_a($block, 'AssetBlock')) {
+
+            if (!is_a($block, 'AssetLib\AssetBlock')) {
                 continue;
             }
 
-            $output .= $this->renderBlock($block);
+            $output[] = $this->renderBlock($block);
 
             $this->blocksRendered[] = $blockName;
         }
-        
-        return $output;
+
+        return implode("\n", $output);
     }
 
     /**
-     * @param null $name
-     * @return string
+     * Renders an AssetBlock object
+     *
+     * @param AssetLib\AssetBlock $block
+     * @param AssetRendererInterface $renderer
+     *
      * @throws AssetRendererNotFoundException
+     * @internal param null $name
+     * @return string
      */
-    public function renderBlock(AssetBlock $block, AssetRenderer $renderer = null) {
-    	if (is_null($renderer)) {
-    		$renderer = $block->getRenderer();
-    	}
-    	
-    	if (is_string($renderer)) {
-    		$renderer = $this->renderers[$renderer];
-    	}
-    	
-    	if (!is_a($renderer, 'AssetRenderer')) {
-            throw new AssetRendererNotFoundException(array('renderer' => $block->getRenderer()));
+    public function renderBlock(AssetBlock $block, AssetRendererInterface $renderer = null) {
+        if (is_null($renderer)) {
+            $renderer = $block->getRenderer();
         }
-    	
-    	return $renderer->renderBlock($block);
+
+        if (is_string($renderer)) {
+            $renderer = $this->renderers[$renderer];
+        }
+
+        if (!is_a($renderer, 'AssetLib\AssetRenderer\AssetRendererInterface')) {
+            throw new AssetRendererNotFoundException(['renderer' => $block->getRenderer()]);
+        }
+
+        return $renderer->renderBlock($block);
     }
 
     /**
+     * Renders an AssetCollection object
+     *
      * @param AssetCollection $collection
-     * @param AssetRenderer $renderer
+     * @param AssetRendererInterface $renderer
+     *
      * @return mixed
      */
-    public function renderCollection(AssetCollection $collection, AssetRenderer $renderer) {
+    public function renderCollection(AssetCollection $collection, AssetRendererInterface $renderer) {
         return $renderer->renderCollection($collection);
     }
 
     /**
+     * Renders a single Asset object
+     *
      * @param AssetInterface $asset
-     * @param AssetRenderer $renderer
+     * @param AssetRendererInterface $renderer
+     *
      * @return mixed
      */
-    public function renderAsset(AssetInterface $asset, AssetRenderer $renderer) {
+    public function renderAsset(AssetInterface $asset, AssetRendererInterface $renderer) {
         return $renderer->render($asset);
     }
 
     /**
+     * Sets an available AssetRenderer for use.
+     *
      * @param $name
-     * @param AssetRenderer $renderer
+     * @param AssetRendererInterface $renderer
      */
-    public function setRenderer($name, AssetRenderer $renderer) {
+    public function setRenderer($name, AssetRendererInterface $renderer) {
         $this->renderers[$name] = $renderer;
     }
 
     /**
+     * Removes an AssetRenderer from the list of available renderers.
+     *
      * @param $name
      */
     public function removeRenderer($name) {
@@ -157,16 +180,17 @@ class AssetRendererHelper extends AppHelper {
      * @param null $helpers
      * @param null $assetTypes
      */
-    public function setDefaultRenderer($helpers = NULL, $assetTypes = NULL) {
-        if ($helpers == NULL) {
-            $helpers = array('Html');
+    public function setDefaultRenderer($helpers = null, $assetTypes = null) {
+        if ($helpers == null) {
+            $helpers = ['Html'];
         }
 
-        if ($assetTypes == NULL) {
+        if ($assetTypes == null) {
             $assetTypes = $this->settings['assetTypes'];
         }
 
-        $helperObjects = array();
+        // Load required helpers
+        $helperObjects = [];
         foreach ($helpers as $name) {
             list($plugin, $helperName) = pluginSplit($name);
             $helperObjects[$helperName] = $this->loadHelper($name);
@@ -175,23 +199,27 @@ class AssetRendererHelper extends AppHelper {
         $this->setRenderer('default', new DefaultAssetRenderer($helperObjects, $assetTypes));
     }
 
-    public function setAsyncRenderer($helpers = NULL, $assetTypes = NULL) {
-        if ($helpers == NULL) {
-            $helpers = array('Html', 'AutoAsset.AsyncAsset');
+    /**
+     * @param null $helpers
+     * @param null $assetTypes
+     */
+    public function setAsyncRenderer($helpers = null, $assetTypes = null) {
+        if ($helpers == null) {
+            $helpers = ['Html', 'AutoAsset.AsyncAsset'];
         }
 
-        if ($assetTypes == NULL) {
+        if ($assetTypes == null) {
             $assetTypes = $this->settings['assetTypes'];
             $asyncTypes = $this->settings['asyncTypes'];
             foreach ($assetTypes as $idx => $type) {
                 if (array_search($type, $asyncTypes) !== false) {
-                    $assetTypes[$type] = array('helper' => 'AsyncAsset');
+                    $assetTypes[$type] = ['helper' => 'AsyncAsset'];
                     unset($assetTypes[$idx]);
                 }
             }
         }
 
-        $helperObjects = array();
+        $helperObjects = [];
         foreach ($helpers as $name) {
             list($plugin, $helperName) = pluginSplit($name);
             $helperObjects[$helperName] = $this->loadHelper($name);
@@ -200,6 +228,13 @@ class AssetRendererHelper extends AppHelper {
         $this->setRenderer('async', new DefaultAssetRenderer($helperObjects, $assetTypes));
     }
 
+    /**
+     * Loads a helper to make it available for use by an AssetRenderer
+     *
+     * @param $name
+     *
+     * @return Helper|mixed
+     */
     protected function loadHelper($name) {
         list($plugin, $helperName) = pluginSplit($name);
         if (!isset($this->$helperName)) {
@@ -211,4 +246,3 @@ class AssetRendererHelper extends AppHelper {
         return $helper;
     }
 }
-?>
