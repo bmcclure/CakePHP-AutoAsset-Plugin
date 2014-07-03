@@ -38,7 +38,7 @@ class AssetCollectorComponent extends Component {
             'ignoreTypes' => [],
         ],
         'ie' => [
-            'conditional' => ['lt IE 9'],
+            'conditional' => 'IE',
         ],
     ];
 

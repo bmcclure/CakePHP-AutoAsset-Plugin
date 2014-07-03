@@ -15,6 +15,16 @@ abstract class BaseAssetRenderer implements AssetRendererInterface {
      */
     protected $assetTypes;
 
+    /* <!--[if IE]>
+         *   <link href="/stylesheets/ie.css" media="screen, projection" rel="stylesheet" type="text/css" />
+         * <![endif]--> */
+
+    protected $templates = [
+        'conditional' => '<!--[if %s]>
+    %s
+<![endif]-->'
+    ];
+
     /**
      * @param array $assetTypes
      */
@@ -57,7 +67,15 @@ abstract class BaseAssetRenderer implements AssetRendererInterface {
      * @return string
      */
     public function renderBlock(AssetBlock $assetBlock) {
-        return $this->_renderAssets($assetBlock->getAssets());
+        $conditional = $assetBlock->getConditional();
+
+        $output = $this->renderCollection($assetBlock->getCollection());
+
+        if (!empty($conditional)) {
+            $output = sprintf($this->templates['conditional'], $conditional, $output);
+        }
+
+        return $output."\n";
     }
 
     /**
