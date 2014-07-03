@@ -18,12 +18,13 @@ abstract class ValueAsset extends BaseAsset implements AssetInterface {
     /**
      * @param string $name
      * @param mixed $value
+     * @param array $options
      */
-    public function __construct($name, $value = null) {
+    public function __construct($name, $value = null, $options = []) {
         $this->name = $name;
         $this->value = $value;
 
-        parent::__construct();
+        parent::__construct($options);
     }
 
     /**

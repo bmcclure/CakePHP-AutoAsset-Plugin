@@ -6,11 +6,12 @@ namespace AssetLib\Asset;
  */
 class JsAsset extends FileAsset implements AssetInterface {
     /**
-     * @param $path
+     * @param array $path
+     * @param array $options
      * @param string $basePath
      */
-    public function __construct($path, $basePath = JS) {
-        parent::__construct($path, $basePath);
+    public function __construct($path, $options = [], $basePath = JS) {
+        parent::__construct($path, $options, $basePath);
     }
 
     /**

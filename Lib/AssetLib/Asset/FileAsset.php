@@ -21,10 +21,11 @@ abstract class FileAsset extends BaseAsset implements AssetInterface {
     protected $basePath = null;
 
     /**
-     * @param $path
+     * @param array $path
+     * @param array $options
      * @param string $basePath
      */
-    public function __construct($path, $basePath = WEBROOT_DIR) {
+    public function __construct($path, $options = [], $basePath = WEBROOT_DIR) {
         $this->path = $path;
 
         if ($this->_isAbsoluteUrl($path)) {
@@ -33,7 +34,7 @@ abstract class FileAsset extends BaseAsset implements AssetInterface {
             $this->basePath = $basePath;
         }
 
-        parent::__construct();
+        parent::__construct($options);
     }
 
     /**

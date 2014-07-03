@@ -123,7 +123,9 @@ class DefaultAssetRenderer extends BaseAssetRenderer {
      * @throws HelperMethodNotFoundException
      */
     public function renderCss(CssAsset $asset) {
-        $params = [$asset->getPath(), $asset->getRel(), ['inline' => true]];
+        $options = ['inline' => true] + $asset->getOptions();
+
+        $params = [$asset->getPath(), $asset->getRel(), $options];
 
         return $this->_renderType('css', 'css', $params);
     }
@@ -135,7 +137,9 @@ class DefaultAssetRenderer extends BaseAssetRenderer {
      * @throws HelperMethodNotFoundException
      */
     public function renderJs(JsAsset $asset) {
-        $params = [$asset->getPath(), ['inline' => true]];
+        $options = ['inline' => true] + $asset->getOptions();
+
+        $params = [$asset->getPath(), $options];
 
         return $this->_renderType('js', 'script', $params);
     }
@@ -149,7 +153,9 @@ class DefaultAssetRenderer extends BaseAssetRenderer {
      * @throws HelperMethodNotFoundException
      */
     public function renderJsGlobal(JsGlobalAsset $asset) {
-        $params = [$asset->getString(), ['inline' => true]];
+        $options = ['inline' => true] + $asset->getOptions();
+
+        $params = [$asset->getString(), ['inline' => true] + $asset->getOptions()];
 
         return $this->_renderType('jsGlobal', 'scriptBlock', $params);
     }

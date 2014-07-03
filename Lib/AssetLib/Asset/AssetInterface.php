@@ -19,6 +19,22 @@ interface AssetInterface {
      * @return mixed
      */
     public function getAssetType();
+
+    /**
+     * Returns the options array for this asset
+     *
+     * @return mixed
+     */
+    public function getOptions();
+
+    /**
+     * Returns the named option if it exists, or null if not
+     *
+     * @param $name
+     *
+     * @return mixed
+     */
+    public function getOption($name);
 }
 
 ?>

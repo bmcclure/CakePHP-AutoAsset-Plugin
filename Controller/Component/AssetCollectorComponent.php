@@ -202,30 +202,31 @@ class AssetCollectorComponent extends Component {
      * @param $name
      * @param mixed $value
      * @param string $block
+     * @param array $options
      */
-    public function jsGlobal($name, $value = null, $block = 'headTop') {
+    public function jsGlobal($name, $value = null, $block = 'headTop', $options = []) {
         if (is_array($name) && is_array($value)) {
             // We have an array of names and a corresponding array of values
             $i = 0;
             foreach ($name as $key) {
-                $this->_jsGlobalSingle($key, $value[$i], $block);
+                $this->_jsGlobalSingle($key, $value[$i], $block, $options);
                 $i++;
             }
         } elseif (is_array($name)) {
             if (is_null($value)) {
                 // We have an associative array of names and values
                 foreach ($name as $key => $val) {
-                    $this->_jsGlobalSingle($key, $val, $block);
+                    $this->_jsGlobalSingle($key, $val, $block, $options);
                 }
             } else {
                 // We have an array of values and a single key for them all
                 foreach ($name as $key) {
-                    $this->_jsGlobalSingle($key, $value, $block);
+                    $this->_jsGlobalSingle($key, $value, $block, $options);
                 }
             }
         } else {
             // We have a single name/value pair
-            $this->_jsGlobalSingle($name, $value, $block);
+            $this->_jsGlobalSingle($name, $value, $block, $options);
         }
     }
 
@@ -233,18 +234,20 @@ class AssetCollectorComponent extends Component {
      * @param $name
      * @param $value
      * @param $block
+     * @param array $options
      */
-    protected function _jsGlobalSingle($name, $value, $block) {
-        $this->_addAssetToBlock(new JsGlobalAsset($name, $value), $block);
+    protected function _jsGlobalSingle($name, $value, $block, $options = []) {
+        $this->_addAssetToBlock(new JsGlobalAsset($name, $value, $options), $block);
     }
 
     /**
      * @param $path
      * @param string $block
+     * @param array $options
      */
-    public function js($path, $block = 'bodyBottom') {
+    public function js($path, $block = 'bodyBottom', $options = []) {
         foreach ((array)$path as $file) {
-            $this->_addAssetToBlock(new JsAsset($file), $block);
+            $this->_addAssetToBlock(new JsAsset($file, $options), $block);
         }
     }
 
@@ -253,10 +256,11 @@ class AssetCollectorComponent extends Component {
      * @param string $rel
      * @param string $media
      * @param string $block
+     * @param array $options
      */
-    public function css($path, $rel = 'stylesheet', $media = 'screen', $block = 'head') {
+    public function css($path, $rel = 'stylesheet', $media = 'screen', $block = 'head', $options = []) {
         foreach ((array)$path as $file) {
-            $this->_addAssetToBlock(new CssAsset($file, $rel, $media), $block);
+            $this->_addAssetToBlock(new CssAsset($file, $rel, $media, $options), $block);
         }
     }
 

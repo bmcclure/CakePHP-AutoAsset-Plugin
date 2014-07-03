@@ -16,18 +16,17 @@ class CssAsset extends FileAsset implements AssetInterface {
     protected $media;
 
     /**
-     * @param $path
+     * @param array $path
      * @param string $rel
      * @param string $media
+     * @param array $options
      * @param string $basePath
-     *
-     * @internal param string $mediaType
      */
-    public function __construct($path, $rel = 'stylesheet', $media = 'screen', $basePath = CSS) {
+    public function __construct($path, $rel = 'stylesheet', $media = 'screen', $options = [], $basePath = CSS) {
         $this->rel = $rel;
         $this->media = $media;
 
-        parent::__construct($path, $basePath);
+        parent::__construct($path, $options, $basePath);
     }
 
     /**
